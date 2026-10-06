@@ -15,18 +15,25 @@ const LENGTH_LABEL = (s: SessionLength | null) =>
         ? "Medium (about 1 hour)"
         : "Long (2 hours or more)";
 
-/** The Y menu: favourite, hide and (games) session length for one item, for the active profile. */
+/** The Y menu: details, favourite, hide and (games) session length for one item, for the active profile. */
 export function OptionsMenu({
   item,
   onClose,
   onChanged,
+  onDetails,
 }: {
   item: UnifiedItem;
   onClose: () => void;
   onChanged: () => void;
+  /** Present when the menu is opened from a tile: opens the Detail screen. */
+  onDetails?: () => void;
 }) {
+  const hasDetails = onDetails !== undefined;
   const nav = useNav();
-  const [state, setState] = useState<FocusState>({ key: "opt:favourite", col: 0 });
+  const [state, setState] = useState<FocusState>({
+    key: hasDetails ? "opt:details" : "opt:favourite",
+    col: 0,
+  });
   const [fav, setFav] = useState(Boolean(item.favourite));
   const [hidden, setHidden] = useState(Boolean(item.hidden));
   const [len, setLen] = useState<SessionLength | null>(
@@ -35,12 +42,13 @@ export function OptionsMenu({
 
   const rows: FocusRow[] = useMemo(
     () => [
+      ...(hasDetails ? [{ id: "details", keys: ["opt:details"] }] : []),
       { id: "fav", keys: ["opt:favourite"] },
       { id: "hide", keys: ["opt:hide"] },
       ...(item.kind === "game" ? [{ id: "len", keys: LENGTHS.map((l) => `len:${l ?? "auto"}`) }] : []),
       { id: "close", keys: ["opt:close"] },
     ],
-    [item.kind],
+    [item.kind, hasDetails],
   );
 
   const save = (change: { favourite?: boolean; hidden?: boolean; sessionLength?: SessionLength | null }) =>
@@ -51,7 +59,7 @@ export function OptionsMenu({
 
   const { focusedKey } = useFocusScope({
     rows,
-    defaultKey: "opt:favourite",
+    defaultKey: hasDetails ? "opt:details" : "opt:favourite",
     state,
     setState,
     modal: true,
@@ -60,7 +68,10 @@ export function OptionsMenu({
       return true;
     },
     onSelect: (k) => {
-      if (k === "opt:favourite") {
+      if (k === "opt:details") {
+        onClose();
+        onDetails?.();
+      } else if (k === "opt:favourite") {
         setFav(!fav);
         void save({ favourite: !fav });
       } else if (k === "opt:hide") {
@@ -93,6 +104,11 @@ export function OptionsMenu({
           <div className="text-muted">Options for {nav.profile?.name ?? "this profile"}</div>
           <div className="mb-8 text-[3rem] font-bold">{item.title}</div>
           <div className="flex flex-col gap-5">
+            {onDetails && (
+              <Focusable fkey="opt:details" className="btn rounded-xl bg-slate-2 px-8 py-4">
+                Details…
+              </Focusable>
+            )}
             <Focusable fkey="opt:favourite" className="btn rounded-xl bg-slate-2 px-8 py-4">
               {fav ? "★ Remove from favourites" : "☆ Add to favourites"}
             </Focusable>

@@ -29,7 +29,11 @@ export function Home() {
       else if (k === "btn:play") nav.push("play");
       else if (k === "btn:watch") nav.push("watch");
       else if (k === "btn:profile") nav.push("profiles");
-      else if (k.startsWith("tile:")) nav.push("detail", { key: k.slice(5) });
+      else if (k.startsWith("tile:")) {
+        // One press launches (brief: Play / Watch). Details are in the Y menu.
+        const item = items.find((i) => `tile:${i.key}` === k);
+        if (item) nav.launch(item);
+      }
     },
     onOptions: (k) => {
       const item = items.find((i) => `tile:${i.key}` === k);

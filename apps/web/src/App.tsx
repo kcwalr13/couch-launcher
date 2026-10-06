@@ -305,6 +305,7 @@ export function App({ initial }: AppProps) {
         {options && (
           <OptionsMenu
             item={options}
+            onDetails={top.screen === "detail" ? undefined : () => push("detail", { key: options.key })}
             onClose={() => setOptions(null)}
             onChanged={() => {
               refresh();

@@ -33,7 +33,8 @@ export function Tonight() {
   const nav = useNav();
   const p = nav.entry.params;
   const step = (STEPS.includes(p.step as Step) ? p.step : "time") as Step;
-  const { data: last } = useApi("tonight-last", api.tonightDefaults);
+  // Keyed by this visit, so the previous answers are always fresh (never a cached copy).
+  const { data: last } = useApi(`tonight-last:${nav.entry.id}`, api.tonightDefaults);
   const { data: profilesData } = useApi("profiles", api.profiles, nav.refreshToken);
   const profiles: Profile[] = profilesData?.profiles ?? [];
 

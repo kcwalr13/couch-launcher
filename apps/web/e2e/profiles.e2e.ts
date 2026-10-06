@@ -31,6 +31,7 @@ test("favourites are per profile and survive a reload", async ({ page }) => {
   const tile = page.locator("[data-item-key='steam:2379780']");
   await press(page, "y");
   await expect(page.getByTestId("options")).toBeVisible();
+  await press(page, "ArrowDown");
   await press(page, "Enter"); // Add to favourites
   await press(page, "Escape");
   await expect(tile.getByLabel("Favourite")).toBeVisible();
@@ -49,7 +50,8 @@ test("hiding from Detail removes the item for this profile only", async ({ page 
   await open(page);
   await press(page, "e");
   await settle(page);
-  await press(page, "Enter"); // Balatro detail
+  await press(page, "y");
+  await press(page, "Enter"); // Details for Balatro
   await expect(page.getByTestId("detail-title")).toHaveText("Balatro");
   await press(page, "ArrowRight", 2); // Hide
   expect(await focusedKey(page)).toBe("act:hide");
@@ -73,11 +75,12 @@ test("session length override from the Y menu shows on Detail", async ({ page })
   await settle(page);
   await press(page, "ArrowRight"); // Hades
   await press(page, "y");
-  await press(page, "ArrowDown", 2); // session length row
+  await press(page, "ArrowDown", 3); // past Details, Favourite and Hide to the session length row
   await press(page, "ArrowRight"); // Short
   await press(page, "Enter");
   await expect(page.getByTestId("options")).toContainText("Session length: Short");
   await press(page, "Escape");
+  await press(page, "y");
   await press(page, "Enter");
   await expect(page.getByTestId("detail-title")).toHaveText("Hades");
   await expect(page.getByTestId("detail")).toContainText("Short sessions (set by you)");

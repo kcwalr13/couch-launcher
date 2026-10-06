@@ -63,10 +63,10 @@ Then work through [`docs/ON_DEVICE.md`](docs/ON_DEVICE.md). It is the checklist 
 | Controller | Action |
 | --- | --- |
 | D-pad / left stick | Move focus (hold to repeat) |
-| A | Select |
+| A | Select. On a game or video, one press starts it (videos resume where they stopped) |
 | B | Back |
 | X | Tonight picker, from anywhere |
-| Y | Item options: favourite, hide, session length |
+| Y | Item options: details, favourite, hide, session length |
 | LB / RB | Switch between Home, Play and Watch |
 | Start | Settings |
 

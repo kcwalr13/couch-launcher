@@ -302,3 +302,14 @@ Each installer finds the executable next to itself.
 **D-064 — UI state flush on hide** (2026-10-06, P8). Besides the 250 ms debounced save, the UI flushes its screen and focus with a `keepalive` PUT on `pagehide` and on `visibilitychange` to hidden. The state is therefore current at the moment a game takes over, or if the browser is killed by the restart mitigation.
 
 **D-065 — Optional dev tools installed in the VM** (2026-10-06, P8). Wine 9.0 (apt) and PowerShell 7.4.6 (GitHub release tarball under `/opt/pwsh`) were installed to exercise the Windows build and installer. Tests that need them skip cleanly when they are missing (`install-ps1.test.ts`; `scripts/wine-smoke.ts` is run by hand). `bun run check` needs neither.
+
+**D-066 — One press launches; Detail lives in the Y menu** (2026-10-06, P8). Re-reading the brief at the end showed a conflict. Play says "One press launches" and Watch says "One press hands off to playback", yet the build first opened Detail on A, which took two presses. Now:
+- A on any tile (Home Continue, Play, Watch) launches the game, or resumes the media at its saved position.
+- Detail (hero art, summary, Play from start, Favourite, Hide, Session length) opens from the Y menu, whose first entry is "Details…".
+- The Detail screen's own Y menu omits that entry.
+
+The Tonight flow stays within five presses: Home, then A on Tonight, A ×3 for the answers, and A on a card.
+
+**D-067 — Play shows last played and playtime** (2026-10-06, P8). The brief's Play screen shows "last played and playtime". Tiles stay artwork-only, so a line under the sort and filter row shows the focused game's title, last played and playtime (for example "Hades · Last played on Thursday · 36 h played"). The grid fills the remaining height in a flex column, so it always ends at the safe line.
+
+**D-068 — Tonight reads its last answers fresh on each visit** (2026-10-06, P8). The full check caught a race: the stale-while-revalidate cache could show the previous visit's defaults, and focus settled on them before fresh data arrived. The last-answers fetch is now keyed by the navigation entry, so it is never served from a cache.

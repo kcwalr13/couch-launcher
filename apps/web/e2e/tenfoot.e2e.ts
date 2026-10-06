@@ -40,6 +40,7 @@ const SCREENS: { name: string; go: (p: Page) => Promise<void> }[] = [
     go: async (p) => {
       await press(p, "ArrowDown");
       await press(p, "ArrowRight");
+      await press(p, "y");
       await press(p, "Enter");
       await settle(p);
     },
@@ -48,6 +49,7 @@ const SCREENS: { name: string; go: (p: Page) => Promise<void> }[] = [
     name: "detail-media",
     go: async (p) => {
       await press(p, "ArrowDown");
+      await press(p, "y");
       await press(p, "Enter");
       await settle(p);
     },

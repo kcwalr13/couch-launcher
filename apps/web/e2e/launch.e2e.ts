@@ -17,9 +17,7 @@ async function becomeVisible(page: Page) {
   });
 }
 
-test("launching a game shows the Launching state, runs the command, and refreshes on return", async ({
-  page,
-}) => {
+test("one press on a game launches it: Launching state, the command, refresh on return", async ({ page }) => {
   await open(page);
   await press(page, "e");
   await settle(page);
@@ -31,8 +29,6 @@ test("launching a game shows the Launching state, runs the command, and refreshe
   await press(page, "ArrowLeft", 5);
   expect(await focusedKey(page)).toBe(key);
   await press(page, "Enter");
-  expect(await screen(page)).toBe("detail");
-  await press(page, "Enter"); // Play
   await expect(page.getByTestId("launching")).toContainText("Portal 2");
   await expect(page.getByTestId("launching")).toContainText("Steam is starting Portal 2.");
   const l = await launches(page);
@@ -45,29 +41,40 @@ test("launching a game shows the Launching state, runs the command, and refreshe
   await expect
     .poll(() => page.evaluate(() => performance.getEntriesByType("resource").length))
     .toBeGreaterThan(before);
-  expect(await focusedKey(page)).toBe("act:play");
+  expect(await focusedKey(page)).toBe(key);
 });
 
-test("B dismisses the Launching state", async ({ page }) => {
+test("Play on the Detail screen launches too", async ({ page }) => {
   await open(page);
-  await press(page, "ArrowDown", 1);
-  await press(page, "ArrowRight");
+  await press(page, "ArrowDown");
+  await press(page, "ArrowRight"); // Balatro
+  await press(page, "y");
+  await press(page, "Enter"); // Details
+  expect(await screen(page)).toBe("detail");
+  expect(await focusedKey(page)).toBe("act:play");
   await press(page, "Enter");
+  await expect(page.getByTestId("launching")).toContainText("Balatro");
+  expect((await launches(page)).spawned.at(-1)?.args).toEqual(["steam://rungameid/2379780"]);
+});
+
+test("B dismisses the Launching state and focus stays put", async ({ page }) => {
+  await open(page);
+  await press(page, "ArrowDown");
+  const tile = await press(page, "ArrowRight");
   await press(page, "Enter");
   await expect(page.getByTestId("launching")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("launching")).toHaveCount(0);
-  expect(await screen(page)).toBe("detail");
+  expect(await screen(page)).toBe("home");
+  expect(await focusedKey(page)).toBe(tile);
 });
 
-test("resuming a movie hands off to Jellyfin Desktop at the resume point", async ({ page }) => {
+test("one press on a movie resumes it in Jellyfin Desktop at the resume point", async ({ page }) => {
   await open(page);
   await press(page, "q");
   await settle(page);
   await press(page, "ArrowRight", 2); // Arrival in Continue Watching
   await press(page, "Enter");
-  await expect(page.getByTestId("detail-title")).toHaveText("Arrival");
-  await press(page, "Enter"); // Resume
   await expect(page.getByTestId("launching")).toContainText("Playing Arrival in Jellyfin Desktop.", {
     timeout: 5000,
   });
@@ -75,18 +82,32 @@ test("resuming a movie hands off to Jellyfin Desktop at the resume point", async
   expect(l.plays.at(-1)?.query.startPositionTicks).toBe(String(4440 * 10_000_000));
 });
 
+test("Play from start on Detail sends position 0", async ({ page }) => {
+  await open(page);
+  await press(page, "q");
+  await settle(page);
+  await press(page, "ArrowRight", 2); // Arrival
+  await press(page, "y");
+  await press(page, "Enter"); // Details
+  await expect(page.getByTestId("detail-title")).toHaveText("Arrival");
+  await press(page, "ArrowRight"); // Play from start
+  expect(await focusedKey(page)).toBe("act:start");
+  await press(page, "Enter");
+  await expect(page.getByTestId("launching")).toContainText("Playing Arrival", { timeout: 5000 });
+  expect((await launches(page)).plays.at(-1)?.query.startPositionTicks).toBe("0");
+});
+
 test("launch errors appear as on-screen messages", async ({ page }) => {
   await open(page);
   await press(page, "q");
   await settle(page);
-  await press(page, "Enter"); // Severance
-  await expect(page.getByTestId("detail")).toBeVisible();
+  const severance = await focusedKey(page);
   await page.request.post("/api/mock/jellyfin", { data: { down: true } });
   await press(page, "Enter");
   await expect(page.getByTestId("message")).toContainText("Can't reach Jellyfin");
   await expect(page.getByTestId("message")).toHaveAttribute("data-kind", "error");
   await expect(page.getByTestId("launching")).toHaveCount(0);
-  expect(await focusedKey(page)).toBe("act:play");
+  expect(await focusedKey(page)).toBe(severance);
 });
 
 test("reloading the page restores the screen and focus", async ({ page }) => {
@@ -96,7 +117,6 @@ test("reloading the page restores the screen and focus", async ({ page }) => {
   await press(page, "ArrowDown");
   await press(page, "ArrowRight", 3);
   const key = await focusedKey(page);
-  await page.waitForTimeout(400); // debounce
   await page.reload();
   await settle(page);
   expect(await screen(page)).toBe("play");
@@ -111,10 +131,10 @@ test("reloading on a Detail screen restores it, and Back goes Home", async ({ pa
   await open(page);
   await press(page, "ArrowDown");
   await press(page, "ArrowRight", 2);
-  await press(page, "Enter");
+  await press(page, "y");
+  await press(page, "Enter"); // Details
   await press(page, "ArrowRight");
   const key = await focusedKey(page);
-  await page.waitForTimeout(400);
   await page.reload();
   await settle(page);
   expect(await screen(page)).toBe("detail");

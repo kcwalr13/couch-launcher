@@ -71,10 +71,10 @@ Screen layouts:
 | Screen | Focus rows |
 | --- | --- |
 | Home | [Tonight, Play, Watch, profile chip] / Continue tiles |
-| Play | [sort ×3, co-op filter, controller filter] / grid rows of 6 |
+| Play | [sort ×3, co-op filter, controller filter] / grid rows of 6 (focused game's last played and playtime shown above the grid) |
 | Watch | ([Try again, Settings] when Jellyfin has a problem) / Continue Watching / Next Up / Movies / Shows |
 | Detail | [Play or Resume, Play from start, Favourite, Hide, Session length] |
-| Options (Y) | Favourite / Hide / session length chips / Close |
+| Options (Y) | Details… (from tiles) / Favourite / Hide / session length chips / Close |
 
 ### Launching and playback
 
@@ -254,3 +254,12 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
 - **Warm `GET /api/home` under 200 ms on fixtures**: measured over real HTTP (`Bun.serve`), 20 warm requests, median about 1 ms and worst about 2 ms in the VM. The test asserts the worst is under 200 ms.
 - **A fresh clone builds one executable per platform**: see the evidence block below.
 - **Wine smoke** (`scripts/wine-smoke.ts`, 18 checks): mock and real-mode scans, the API, the embedded UI, a failed launch reported as a message, doctor, configure writing `%APPDATA%`, and kiosk-command naming Edge.
+
+### Final review fixes (after Phase 8)
+
+- **One press launches** (D-066). `launch.e2e.ts`:
+  - A on a Play tile starts Portal 2 (`steam://rungameid/620`).
+  - A on a Watch tile resumes Arrival at 4440 s.
+  - Play on Detail, and Play from start (position 0), are covered.
+  - B dismisses the Launching state with focus kept.
+- **Play meta line** (D-067). `navigation.e2e.ts` checks "Hades · Last played on Thursday · 36 h played". The ten-foot audit caught the first layout attempt overflowing the safe area; the flex-column layout fixed it.

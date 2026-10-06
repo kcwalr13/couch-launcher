@@ -43,6 +43,7 @@ test("every screen is reachable by keys alone", async ({ page }) => {
   expect(await screen(page)).toBe("watch");
   await press(page, "Escape");
   await press(page, "ArrowDown"); // from the Watch button (column 3): lands on the 3rd Continue tile
+  await press(page, "y"); // options menu: Details is first
   await press(page, "Enter");
   expect(await screen(page)).toBe("detail");
   await expect(page.getByTestId("detail-title")).toHaveText("Paddington 2");
@@ -66,6 +67,7 @@ test("Back restores the previous focus", async ({ page }) => {
   await open(page);
   await press(page, "ArrowDown");
   const target = await press(page, "ArrowRight", 3);
+  await press(page, "y");
   await press(page, "Enter");
   expect(await screen(page)).toBe("detail");
   await press(page, "Escape");
@@ -152,6 +154,14 @@ test("input to visible focus change takes under 100 ms", async ({ page }) => {
     samples.push(ms);
   }
   expect(Math.max(...samples)).toBeLessThan(100);
+});
+
+test("Play shows last played and playtime for the focused game", async ({ page }) => {
+  await open(page);
+  await press(page, "e");
+  await settle(page);
+  await press(page, "ArrowRight"); // Hades
+  await expect(page.getByTestId("focused-meta")).toHaveText("Hades · Last played on Thursday · 36 h played");
 });
 
 test("missing artwork shows a text fallback", async ({ page }) => {

@@ -57,11 +57,15 @@ test("D-pad, A, B, LB/RB, X and Start work through the Gamepad API", async ({ pa
   expect((await focusedKey(page)).startsWith("tile:")).toBe(true);
   await tap(page, 15); // right
   const second = await focusedKey(page);
-  await tap(page, 0); // A
+  await tap(page, 3); // Y: options
+  await tap(page, 0); // A on "Details"
   expect(await screen(page)).toBe("detail");
   await tap(page, 1); // B
   expect(await screen(page)).toBe("home");
   expect(await focusedKey(page)).toBe(second);
+  await tap(page, 0); // A on a tile launches in one press
+  await expect(page.getByTestId("launching")).toBeVisible();
+  await tap(page, 1); // B dismisses the Launching state
   await tap(page, 5); // RB
   expect(await screen(page)).toBe("play");
   await tap(page, 4); // LB

@@ -43,7 +43,8 @@ export function Watch() {
         return;
       }
       const item = itemFor(k);
-      if (item) nav.push("detail", { key: item.key });
+      // One press hands off to playback (resuming where it stopped). Details are in the Y menu.
+      if (item) nav.launch(item);
     },
     onOptions: (k) => {
       const item = itemFor(k);
