@@ -1,0 +1,39 @@
+{
+  "Items": [
+    {
+      "Name": "Housework",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "a3a685ce8c24d41757d72bcfc129b3b3",
+      "DateCreated": "2026-06-05T19:00:00.0000000Z",
+      "RunTimeTicks": 4200000000,
+      "ProductionYear": 2018,
+      "IndexNumber": 11,
+      "ParentIndexNumber": 3,
+      "IsFolder": false,
+      "Type": "Episode",
+      "Overview": "Bluey S3E11.",
+      "SeriesName": "Bluey",
+      "SeriesId": "d5ca236ddb3593ca8f27f98abb794a95",
+      "SeasonId": "4b21ca9aff32213bdf53f1ad79bcfb55",
+      "SeasonName": "Season 3",
+      "SeriesPrimaryImageTag": "421ace2211324b935ae4918f18e70e3f",
+      "ParentBackdropItemId": "d5ca236ddb3593ca8f27f98abb794a95",
+      "ParentBackdropImageTags": [
+        "421ace2211324b935ae4918f18e70e3f"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "a3a685ce8c24d41757d72bcfc129b3b3"
+      },
+      "ImageTags": {},
+      "BackdropImageTags": [],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    }
+  ],
+  "TotalRecordCount": 1,
+  "StartIndex": 0
+}

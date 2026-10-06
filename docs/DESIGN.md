@@ -32,6 +32,29 @@ kiosk browser ──HTTP──> local service ──read-only──> Steam files
 
 `db.ts` creates the brief's tables plus `app_setting` (D-004) and seeds the three preset profiles.
 
+### Steam adapter
+
+`adapters/steam/`:
+- `vdf.ts`: text and binary KeyValues parsers, with case-insensitive accessors.
+- `steam.ts`: finds the root (via `platform.findSteamRoot`), the user, library folders, manifests, `localconfig.vdf` playtime and last played, and `shortcuts.vdf`.
+- `art.ts`: local art resolution.
+- `store-metadata.ts`: appdetails fetch and cache, rate-limited, offline-tolerant.
+- `items.ts`: maps a scan plus store metadata to `UnifiedItem`.
+
+`services/library.ts` caches the scan (15 s TTL), filters runtimes and utility shortcuts, overlays per-profile prefs, and sorts.
+
+### Fixtures and mock mode
+
+`scripts/make-fixtures.ts` generates everything under `fixtures/` relative to `FIXTURE_NOW = 2026-10-03T19:00Z`:
+- 12 games plus 3 runtimes, across two libraries
+- two Steam users
+- a binary shortcuts file with 4 entries
+- art in every librarycache layout: new, flat, hashed, header-only, none
+- store appdetails JSON
+- Jellyfin JSON and images
+
+`mock/mapped-fs.ts` mounts the Steam tree at virtual Linux or Windows paths (D-029).
+
 ## Phase acceptance evidence
 
 ### Phase 0 — Foundations
@@ -55,3 +78,17 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
 | Windows Steam path | `platform/windows.ts` `findSteamRoot` | `platform-commands.test.ts`. Parser checked against real `reg.exe` output under Wine. |
 | Windows launch command | `platform/windows.ts` | `platform-commands.test.ts` |
 | Windows start at sign-in | D-017 | Implemented in `install.ps1` (Phase 8) |
+
+### Phase 2 — Steam adapter
+
+- **Exact item list under both platforms**: `steam-adapter.test.ts` runs the real adapter against the fixtures mounted at Linux paths and at Windows paths. It asserts the same 12 games (app id, title, playtime, last played) and 4 shortcuts (32-bit id, title, 64-bit game id computed independently in Python, last played). Libraries, user selection and the configured-user override are covered too.
+- **Missing artwork falls back cleanly**: every layout resolves (new, flat, hashed subfolder, header-only), and Lethal Company and StarCraft II resolve to `null`, which the art proxy turns into the UI's text fallback in Phase 4.
+- **No file under the Steam root is opened for writing**, shown three ways:
+  1. `ReadFs` has no write methods.
+  2. A Proxy spy shows only `exists/stat/readFile/readText/readdir` are called, and a SHA-1 + mtime snapshot of `fixtures/steam` is identical after a full scan.
+  3. An `strace -f` trace of a full scan plus art reads (`test/support/scan-fixture.ts`) shows no `O_WRONLY`, `O_RDWR`, `O_CREAT`, `O_TRUNC`, unlink, rename, mkdir or truncate under the Steam tree.
+- **Store metadata cache**: `store-metadata.test.ts` covers the request gap, the 30-day refresh, offline use of the cache, 429 backoff, and unavailable apps not being refetched.
+- **API**: `games-api.test.ts` covers sort (recent, A–Z, playtime), co-op and controller filters, and status.
+- **Windows runtime (Wine)**: `scripts/wine-smoke.ts`, run with the cross-compiled `.exe`:
+  - Mock mode: fixtures at `C:\Program Files (x86)\Steam`, 16 items.
+  - Real mode: fixtures copied onto the Wine C: and D: drives. The Steam root comes from `HKCU\Software\Valve\Steam\SteamPath` through the real `reg.exe`, both libraries are found, and `/api/games` lists 14 games.

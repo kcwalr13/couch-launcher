@@ -1,0 +1,47 @@
+{
+  "1426210": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "It Takes Two",
+      "steam_appid": 1426210,
+      "short_description": "Embark on the craziest journey of your life in It Takes Two, a genre-bending platform adventure created purely for co-op.",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "25",
+          "description": "Adventure"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 9,
+          "description": "Co-op"
+        },
+        {
+          "id": 38,
+          "description": "Online Co-op"
+        },
+        {
+          "id": 39,
+          "description": "Shared/Split Screen Co-op"
+        },
+        {
+          "id": 24,
+          "description": "Shared/Split Screen"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        }
+      ]
+    }
+  }
+}

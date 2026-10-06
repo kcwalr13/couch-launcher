@@ -1,0 +1,39 @@
+{
+  "1966720": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Lethal Company",
+      "steam_appid": 1966720,
+      "short_description": "A co-op horror about scavenging at abandoned moons to sell scrap to the Company.",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "25",
+          "description": "Adventure"
+        },
+        {
+          "id": "23",
+          "description": "Indie"
+        }
+      ],
+      "categories": [
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 9,
+          "description": "Co-op"
+        },
+        {
+          "id": 38,
+          "description": "Online Co-op"
+        }
+      ]
+    }
+  }
+}

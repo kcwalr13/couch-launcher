@@ -1,0 +1,55 @@
+{
+  "413150": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Stardew Valley",
+      "steam_appid": 413150,
+      "short_description": "You've inherited your grandfather's old farm plot in Stardew Valley.",
+      "genres": [
+        {
+          "id": "23",
+          "description": "Indie"
+        },
+        {
+          "id": "3",
+          "description": "RPG"
+        },
+        {
+          "id": "28",
+          "description": "Simulation"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 38,
+          "description": "Online Co-op"
+        },
+        {
+          "id": 39,
+          "description": "Shared/Split Screen Co-op"
+        },
+        {
+          "id": 24,
+          "description": "Shared/Split Screen"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        },
+        {
+          "id": 44,
+          "description": "Remote Play Together"
+        }
+      ]
+    }
+  }
+}

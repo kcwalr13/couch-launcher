@@ -104,3 +104,39 @@ Sources: Playnite#1016, Deguffer#63, Vibepollo#555.
 The unofficial limit is about 200 requests per 5 minutes, so requests go out one at a time, 1.5 s apart, back off for 5 minutes on HTTP 429, and the cache refreshes after 30 days. The store host is blocked from this VM, so fixtures follow the documented shape and live fetching is on the on-device list. Source: woctezuma/steam-api `categories.json`.
 
 **D-022 — Wine as a Windows test bed** (2026-10-06, P1). Wine 9.0 was installed in the dev VM (`apt-get install wine64`). It runs the cross-compiled `.exe`, so Windows code paths (`process.platform === "win32"`, `%APPDATA%`/`%LOCALAPPDATA%`, `reg.exe`) are exercised for real by `scripts/wine-smoke.ts`. It is optional, not part of `check`, because a fresh clone has no Wine. A Wine pass is evidence, not proof.
+
+## Phase 2: Steam adapter
+
+**D-023 — Fixture shortcuts file has four entries, not two** (2026-10-06, P2). Two are game shortcuts: Diablo IV, which has grid art, and StarCraft II, which has none. The other two are the shortcuts a real setup will contain: "Jellyfin Desktop", used by the playback handoff, and "Couch Launcher", the kiosk itself. Including them proves those two are kept out of the games list.
+
+**D-024 — Shortcuts that are not games** (2026-10-06, P2). A shortcut is left out of games, Continue and the picker if any of these holds:
+- it is hidden (`IsHidden`)
+- its name contains `playback.client_shortcut` (default "Jellyfin")
+- its name contains "Couch Launcher"
+- its command line points at `127.0.0.1:<port>` or `localhost:<port>`
+
+**D-025 — Runtimes and tools are not games** (2026-10-06, P2). These are dropped:
+- a fixed list of app ids: Steamworks Common Redistributables, the Steam Linux Runtimes, Proton Experimental/Hotfix, the EAC/BattlEye runtimes, SteamVR
+- names starting with "Proton", "Steam Linux Runtime" or "Steamworks Common"
+- any app whose cached store metadata says `type` is not "game"
+
+Manifests without the fully-installed StateFlags bit (4) are skipped.
+
+**D-026 — Derived tags** (2026-10-06, P2).
+- Couch co-op means store category 24, 37 or 39 (any shared/split-screen mode). Online-only co-op does not count for "Fits the group".
+- Controller support is `full` for category 28, `partial` for 18, `none` otherwise, and `null` (unknown) when there is no store data. Shortcuts always have no store data.
+- Session length: when a game has several mapped genres, the longest wins. With no mapped genre, or no data, it falls back to `picker.default_session_length` (default `medium`).
+
+**D-027 — User selection** (2026-10-06, P2). Order:
+1. `steam.user_id`, if that userdata folder exists
+2. the `MostRecent` login in `loginusers.vdf`
+3. the only folder under `userdata`
+4. the lowest-numbered folder, with a warning
+
+Playtime, last played, shortcuts and grid art all come from the chosen user.
+
+**D-028 — Steam scan freshness** (2026-10-06, P2). The scan is cached for 15 s and re-read on demand, which costs a few small file reads. A launched game's new "last played" therefore shows on the next request once the UI regains visibility. Store metadata refreshes in the background after each scan. Mock mode skips the 1.5 s rate limit because its fetches are fixture reads.
+
+**D-029 — Mock mode mounts fixtures at virtual paths** (2026-10-06, P2). `mock/mapped-fs.ts` presents `fixtures/steam/root` and `library2` at `/home/deck/.local/share/Steam` and `/run/media/deck/SD/SteamLibrary` on Linux, or at `C:\Program Files (x86)\Steam` and `D:\SteamLibrary` on Windows. On Windows, `libraryfolders.vdf` is swapped for a copy with Windows paths. The real adapter and the real platform implementation then run unchanged, and launches go to a recording runner.
+
+**D-030 — Fixture images** (2026-10-06, P2). Fixture art is small abstract PNGs drawn by the generator: deterministic, with no fonts and no copyrighted art. Some are saved under Steam's `.jpg` names, so the art proxy detects the image type from magic bytes rather than the file extension.

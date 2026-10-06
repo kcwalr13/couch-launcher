@@ -1,0 +1,35 @@
+{
+  "367520": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Hollow Knight",
+      "steam_appid": 367520,
+      "short_description": "Forge your own path in Hollow Knight! An epic action adventure through a vast ruined kingdom of insects and heroes.",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "25",
+          "description": "Adventure"
+        },
+        {
+          "id": "23",
+          "description": "Indie"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        }
+      ]
+    }
+  }
+}

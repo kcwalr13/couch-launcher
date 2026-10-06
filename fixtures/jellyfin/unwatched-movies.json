@@ -1,0 +1,250 @@
+{
+  "Items": [
+    {
+      "Name": "Arrival",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "c0904a5ca22545ed6550e5653ace653b",
+      "DateCreated": "2026-03-17T19:00:00.0000000Z",
+      "PremiereDate": "2016-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG-13",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 69600000000,
+      "ProductionYear": 2016,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "A linguist works with the military to communicate with alien lifeforms.",
+      "Genres": [
+        "Drama",
+        "Science Fiction"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 44400000000,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "c0904a5ca22545ed6550e5653ace653b",
+        "PlayedPercentage": 63.793103448275865,
+        "LastPlayedDate": "2026-09-29T17:00:00.0000000Z"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "1e0059203d8c1fb9c45cab3532726b93"
+      },
+      "BackdropImageTags": [
+        "1e0059203d8c1fb9c45cab3532726b93"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Paddington 2",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "cfeced2351f917002357bcf805c27599",
+      "DateCreated": "2026-09-03T19:00:00.0000000Z",
+      "PremiereDate": "2017-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 61800000000,
+      "ProductionYear": 2017,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "Paddington picks up a series of odd jobs to buy the perfect present.",
+      "Genres": [
+        "Comedy",
+        "Family"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 51000000000,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "cfeced2351f917002357bcf805c27599",
+        "PlayedPercentage": 82.52427184466019,
+        "LastPlayedDate": "2026-10-01T17:00:00.0000000Z"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "1c77454733c23c6c29661c68edb7301d"
+      },
+      "BackdropImageTags": [
+        "1c77454733c23c6c29661c68edb7301d"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Spirited Away",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "2cad4fdf50d4e9b45548801250db2f95",
+      "DateCreated": "2026-07-05T19:00:00.0000000Z",
+      "PremiereDate": "2001-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 75000000000,
+      "ProductionYear": 2001,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "A girl wanders into a world ruled by gods, witches and spirits.",
+      "Genres": [
+        "Animation",
+        "Fantasy"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "2cad4fdf50d4e9b45548801250db2f95"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "39f88e43a248212092e30cc28c06b4e9"
+      },
+      "BackdropImageTags": [
+        "39f88e43a248212092e30cc28c06b4e9"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Mad Max: Fury Road",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "07c1ecdf324810b40345aea0a10d5919",
+      "DateCreated": "2026-09-30T19:00:00.0000000Z",
+      "PremiereDate": "2015-01-01T00:00:00.0000000Z",
+      "OfficialRating": "R",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 72000000000,
+      "ProductionYear": 2015,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler.",
+      "Genres": [
+        "Action"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "07c1ecdf324810b40345aea0a10d5919"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "3da3fe133929259031e8ebb07dd5a3ed"
+      },
+      "BackdropImageTags": [
+        "3da3fe133929259031e8ebb07dd5a3ed"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "The Grand Budapest Hotel",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "329821d0987d7189fb73f777ad355741",
+      "DateCreated": "2026-09-23T19:00:00.0000000Z",
+      "PremiereDate": "2014-01-01T00:00:00.0000000Z",
+      "OfficialRating": "R",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 59400000000,
+      "ProductionYear": 2014,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "A concierge and his lobby boy are framed for murder.",
+      "Genres": [
+        "Comedy"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "329821d0987d7189fb73f777ad355741"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "23541e24a46b45050cfb5627ad89bb49"
+      },
+      "BackdropImageTags": [
+        "23541e24a46b45050cfb5627ad89bb49"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Dune: Part Two",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "12302e20a4d86eb90e67d8db05c0d569",
+      "DateCreated": "2026-10-02T19:00:00.0000000Z",
+      "PremiereDate": "2024-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG-13",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 99600000000,
+      "ProductionYear": 2024,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "Paul Atreides unites with the Fremen on a path of revenge.",
+      "Genres": [
+        "Science Fiction",
+        "Adventure"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "12302e20a4d86eb90e67d8db05c0d569"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "bb582eac7ad14b1d5a0dcd4bd6b0a2e9"
+      },
+      "BackdropImageTags": [
+        "bb582eac7ad14b1d5a0dcd4bd6b0a2e9"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Wallace & Gromit: Vengeance Most Fowl",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "0b750749733aabde2ccdb830f699d1ad",
+      "DateCreated": "2026-07-20T19:00:00.0000000Z",
+      "PremiereDate": "2024-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 47400000000,
+      "ProductionYear": 2024,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "Gromit's concern grows when Wallace becomes over-reliant on his inventions.",
+      "Genres": [
+        "Animation",
+        "Comedy",
+        "Family"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "0b750749733aabde2ccdb830f699d1ad"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {},
+      "BackdropImageTags": [],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    }
+  ],
+  "TotalRecordCount": 7,
+  "StartIndex": 0
+}

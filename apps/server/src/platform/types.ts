@@ -57,6 +57,7 @@ export interface PathLib {
   dirname(p: string): string;
   basename(p: string): string;
   isAbsolute(p: string): boolean;
+  relative(from: string, to: string): string;
   sep: string;
 }
 

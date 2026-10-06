@@ -1,0 +1,90 @@
+"UserLocalConfigStore"
+{
+	"Software"
+	{
+		"Valve"
+		{
+			"Steam"
+			{
+				"apps"
+				{
+					"620"
+					{
+						"Playtime"		"0"
+						"Playtime2wks"		"0"
+					}
+					"105600"
+					{
+						"Playtime"		"1500"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1787155200"
+					}
+					"294100"
+					{
+						"Playtime"		"2900"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1787587200"
+					}
+					"367520"
+					{
+						"Playtime"		"300"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1780675200"
+					}
+					"413150"
+					{
+						"Playtime"		"6010"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1789315200"
+					}
+					"504230"
+					{
+						"Playtime"		"820"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1784995200"
+					}
+					"1091500"
+					{
+						"Playtime"		"3300"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1790611200"
+					}
+					"1145360"
+					{
+						"Playtime"		"2140"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1790870400"
+					}
+					"1426210"
+					{
+						"Playtime"		"540"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1790265600"
+					}
+					"1794680"
+					{
+						"Playtime"		"860"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1790784000"
+					}
+					"1966720"
+					{
+						"Playtime"		"95"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1773763200"
+					}
+					"2379780"
+					{
+						"Playtime"		"410"
+						"Playtime2wks"		"0"
+						"LastPlayed"		"1790956800"
+					}
+				}
+			}
+		}
+	}
+	"friends"
+	{
+		"PersonaName"		"Couch Player"
+	}
+}

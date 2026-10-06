@@ -1,0 +1,115 @@
+{
+  "Items": [
+    {
+      "Name": "Woe's Hollow",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "bbf07afab491639b1135c949d2cd61b1",
+      "DateCreated": "2026-08-24T19:00:00.0000000Z",
+      "RunTimeTicks": 31200000000,
+      "ProductionYear": 2022,
+      "IndexNumber": 4,
+      "ParentIndexNumber": 2,
+      "IsFolder": false,
+      "Type": "Episode",
+      "Overview": "Severance S2E4.",
+      "SeriesName": "Severance",
+      "SeriesId": "5360c7e0045a77f9712cead3012a48a5",
+      "SeasonId": "19f72c0c0f1a8dfd224de08f06b404b9",
+      "SeasonName": "Season 2",
+      "SeriesPrimaryImageTag": "28967e7b3ce8e4884482cbfa3c15c8b9",
+      "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
+      "ParentBackdropImageTags": [
+        "28967e7b3ce8e4884482cbfa3c15c8b9"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 6000000000,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "bbf07afab491639b1135c949d2cd61b1",
+        "PlayedPercentage": 19.23076923076923,
+        "LastPlayedDate": "2026-10-02T18:00:00.0000000Z"
+      },
+      "ImageTags": {},
+      "BackdropImageTags": [],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Paddington 2",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "cfeced2351f917002357bcf805c27599",
+      "DateCreated": "2026-09-03T19:00:00.0000000Z",
+      "PremiereDate": "2017-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 61800000000,
+      "ProductionYear": 2017,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "Paddington picks up a series of odd jobs to buy the perfect present.",
+      "Genres": [
+        "Comedy",
+        "Family"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 51000000000,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "cfeced2351f917002357bcf805c27599",
+        "PlayedPercentage": 82.52427184466019,
+        "LastPlayedDate": "2026-10-01T17:00:00.0000000Z"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "1c77454733c23c6c29661c68edb7301d"
+      },
+      "BackdropImageTags": [
+        "1c77454733c23c6c29661c68edb7301d"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    },
+    {
+      "Name": "Arrival",
+      "ServerId": "f00dfeedcafe4c0ffee0123456789abc",
+      "Id": "c0904a5ca22545ed6550e5653ace653b",
+      "DateCreated": "2026-03-17T19:00:00.0000000Z",
+      "PremiereDate": "2016-01-01T00:00:00.0000000Z",
+      "OfficialRating": "PG-13",
+      "CommunityRating": 7.5,
+      "RunTimeTicks": 69600000000,
+      "ProductionYear": 2016,
+      "IsFolder": false,
+      "Type": "Movie",
+      "Overview": "A linguist works with the military to communicate with alien lifeforms.",
+      "Genres": [
+        "Drama",
+        "Science Fiction"
+      ],
+      "UserData": {
+        "PlaybackPositionTicks": 44400000000,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "c0904a5ca22545ed6550e5653ace653b",
+        "PlayedPercentage": 63.793103448275865,
+        "LastPlayedDate": "2026-09-29T17:00:00.0000000Z"
+      },
+      "PrimaryImageAspectRatio": 0.6666666666666666,
+      "VideoType": "VideoFile",
+      "ImageTags": {
+        "Primary": "1e0059203d8c1fb9c45cab3532726b93"
+      },
+      "BackdropImageTags": [
+        "1e0059203d8c1fb9c45cab3532726b93"
+      ],
+      "LocationType": "FileSystem",
+      "MediaType": "Video"
+    }
+  ],
+  "TotalRecordCount": 3,
+  "StartIndex": 0
+}

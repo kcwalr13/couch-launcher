@@ -1,0 +1,18 @@
+[
+  {
+    "Id": "session-jellyfin-desktop",
+    "UserId": "8a1b2c3d4e5f60718293a4b5c6d7e8f9",
+    "UserName": "living-room",
+    "Client": "Jellyfin Desktop",
+    "DeviceName": "living-room-pc",
+    "DeviceId": "jd-device",
+    "ApplicationVersion": "2.0.0",
+    "LastActivityDate": "2026-10-03T19:00:00.0000000Z",
+    "SupportsRemoteControl": true,
+    "SupportsMediaControl": true,
+    "PlayableMediaTypes": [
+      "Audio",
+      "Video"
+    ]
+  }
+]

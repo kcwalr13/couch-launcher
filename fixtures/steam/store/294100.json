@@ -1,0 +1,31 @@
+{
+  "294100": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "RimWorld",
+      "steam_appid": 294100,
+      "short_description": "A sci-fi colony sim driven by an intelligent AI storyteller.",
+      "genres": [
+        {
+          "id": "23",
+          "description": "Indie"
+        },
+        {
+          "id": "28",
+          "description": "Simulation"
+        },
+        {
+          "id": "2",
+          "description": "Strategy"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        }
+      ]
+    }
+  }
+}

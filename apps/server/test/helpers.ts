@@ -6,6 +6,8 @@ import { fixedClock } from "../src/clock.ts";
 import { type Config, defaultConfig } from "../src/config.ts";
 import { Store } from "../src/db.ts";
 import { createLogger } from "../src/log.ts";
+import { mockStoreFetch } from "../src/mock/fetch.ts";
+import { steamFixtureFs } from "../src/mock/fixtures.ts";
 import { createPlatform } from "../src/platform/index.ts";
 import type {
   Command,
@@ -123,17 +125,37 @@ export interface TestApp {
   send: (method: string, p: string, body?: unknown) => Promise<Response>;
 }
 
-export function makeTestApp(over: Partial<AppDeps> & { configure?: (c: Config) => void } = {}): TestApp {
+/** Fixture-backed deps for one platform, as mock mode wires them. */
+export function fixtureDeps(id: PlatformId = "linux") {
+  const steamFs = steamFixtureFs(id);
+  const proc = recordingProc();
+  const platform = createPlatform(id, {
+    env: {},
+    home: id === "windows" ? "C:\\Users\\deck" : "/home/deck",
+    fs: steamFs,
+    proc,
+  });
+  return { steamFs, proc, platform };
+}
+
+export function makeTestApp(
+  over: Partial<AppDeps> & { configure?: (c: Config) => void; platformId?: PlatformId } = {},
+): TestApp & { proc: RecordingProc } {
   const t = tempDir();
   const config = defaultConfig();
   over.configure?.(config);
+  const fx = fixtureDeps(over.platformId ?? "linux");
   const deps: AppDeps = {
     config,
-    platform: testPlatform("linux"),
+    platform: fx.platform,
+    steamFs: fx.steamFs,
+    proc: fx.proc,
     store: new Store(path.join(t.dir, "test.sqlite")),
     clock: fixedClock(FIXTURE_NOW),
     log: createLogger({ quiet: true, capture: true }),
     mock: true,
+    dataDir: t.dir,
+    net: { store: mockStoreFetch(FIXTURES) },
     ...over,
   };
   const app = createApp(deps);
@@ -141,6 +163,7 @@ export function makeTestApp(over: Partial<AppDeps> & { configure?: (c: Config) =
   return {
     app,
     deps,
+    proc: deps.proc as RecordingProc,
     cleanup: () => {
       deps.store.close();
       t.cleanup();
