@@ -4,6 +4,9 @@
  *   couch-launcher serve    run the local service (default)
  *   couch-launcher doctor   print what the service can find, read-only
  *   couch-launcher version
+ *   couch-launcher configure --jellyfin-url URL --api-key KEY [--user-id ID]   (used by the installers)
+ *   couch-launcher kiosk-command   print the kiosk browser command as JSON (used by the installers)
+ *   couch-launcher config-path     print the config file path
  * Environment:
  *   COUCH_MOCK=1            run entirely from fixtures (no Steam, no Jellyfin, launches are recorded)
  *   COUCH_NOW=<iso>         pin the clock (mock mode and tests)
@@ -25,11 +28,17 @@ async function main(argv: string[]): Promise<number> {
     log.info(`Couch Launcher ${VERSION} listening on http://${server.hostname}:${server.port}`);
     return await new Promise<number>(() => {});
   }
+  if (cmd === "configure" || cmd === "kiosk-command" || cmd === "config-path") {
+    const { runTool } = await import("./tools.ts");
+    return runTool(cmd, argv.slice(1), process.env);
+  }
   if (cmd === "doctor") {
     const { doctor } = await import("./doctor.ts");
     return doctor(process.env);
   }
-  console.error(`unknown command: ${cmd}\nusage: couch-launcher [serve|doctor|version]`);
+  console.error(
+    `unknown command: ${cmd}\nusage: couch-launcher [serve|doctor|configure|kiosk-command|config-path|version]`,
+  );
   return 2;
 }
 

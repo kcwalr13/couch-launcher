@@ -41,9 +41,7 @@ export interface ArtDeps {
 export class ArtService {
   private readonly missing = new Map<string, number>();
 
-  constructor(private readonly d: ArtDeps) {
-    mkdirSync(d.cacheDir, { recursive: true });
-  }
+  constructor(private readonly d: ArtDeps) {}
 
   private cachePath(key: string, kind: ArtKind): string {
     return path.join(this.d.cacheDir, `${key.replace(/[^A-Za-z0-9_-]/g, "_")}.${kind}`);
@@ -55,6 +53,7 @@ export class ArtService {
   }
 
   private writeCache(key: string, kind: ArtKind, body: Uint8Array): void {
+    mkdirSync(this.d.cacheDir, { recursive: true });
     const p = this.cachePath(key, kind);
     const tmp = `${p}.tmp`;
     writeFileSync(tmp, body);

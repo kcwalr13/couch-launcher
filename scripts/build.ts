@@ -4,7 +4,7 @@
  *   bun run build --target linux  one target
  * Steps: vite build -> embed apps/web/dist as base64 into embedded-web.ts -> bun build --compile -> restore stub.
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const repo = path.resolve(import.meta.dir, "..");
@@ -14,10 +14,16 @@ const entry = path.join(repo, "apps", "server", "src", "main.ts");
 const outDir = path.join(repo, "out");
 
 const TARGETS = {
-  linux: { bunTarget: "bun-linux-x64", out: "couch-launcher-linux-x64", extra: [] as string[] },
+  linux: {
+    bunTarget: "bun-linux-x64",
+    out: "linux/couch-launcher-linux-x64",
+    extra: [] as string[],
+    bundle: ["scripts/install.sh", "scripts/couch-launcher.service", "steam-input"],
+  },
   windows: {
     bunTarget: "bun-windows-x64",
-    out: "couch-launcher-windows-x64.exe",
+    out: "windows/couch-launcher-windows-x64.exe",
+    bundle: ["scripts/install.ps1"],
     // Hidden console: the service runs at sign-in without a window. `doctor` therefore writes its
     // report to a file as well as stdout (see DECISIONS D-014).
     extra: ["--windows-hide-console"],
@@ -73,6 +79,13 @@ try {
     console.log(
       `built out/${spec.out} (${(statSync(path.join(outDir, spec.out)).size / 1e6).toFixed(1)} MB)`,
     );
+    // Release folder: the executable plus its installer and support files, side by side.
+    const dir = path.dirname(path.join(outDir, spec.out));
+    mkdirSync(dir, { recursive: true });
+    for (const f of [...spec.bundle, "README.md", "docs/ON_DEVICE.md"]) {
+      cpSync(path.join(repo, f), path.join(dir, path.basename(f)), { recursive: true });
+    }
+    console.log(`bundled out/${path.basename(dir)}: ${readdirSync(dir).join(", ")}`);
   }
 } finally {
   writeFileSync(embedFile, stub);

@@ -298,3 +298,33 @@ export function loadConfigFile(
   }
   return { ...parseConfig(raw), created, path };
 }
+
+/**
+ * Set string values in the config file text while keeping its comments and layout
+ * (used by `couch-launcher configure`, which the install scripts call).
+ */
+export function setConfigValues(text: string, section: string, values: Record<string, string>): string {
+  const lines = text.split("\n");
+  const header = `[${section}]`;
+  let start = lines.findIndex((l) => l.trim() === header);
+  if (start < 0) {
+    if (lines.length && lines[lines.length - 1] !== "") lines.push("");
+    lines.push(header);
+    start = lines.length - 1;
+  }
+  let end = lines.findIndex((l, i) => i > start && /^\s*\[/.test(l));
+  if (end < 0) end = lines.length;
+  for (const [key, value] of Object.entries(values)) {
+    const line = `${key} = ${JSON.stringify(value)}`;
+    const idx = lines.findIndex((l, i) => i > start && i < end && new RegExp(`^\\s*${key}\\s*=`).test(l));
+    if (idx >= 0) lines[idx] = line;
+    else {
+      // Insert after the last non-blank line of the section.
+      let at = end;
+      while (at - 1 > start && (lines[at - 1] ?? "").trim() === "") at--;
+      lines.splice(at, 0, line);
+      end++;
+    }
+  }
+  return lines.join("\n");
+}

@@ -13,7 +13,10 @@ After any context compaction, re-read `docs/BRIEF.md`, this file, `docs/DESIGN.m
 | `bun test` | Unit and API tests (TZ forced to UTC by `scripts/test-preload.ts`) |
 | `bun run e2e` | Playwright UI tests (needs `bun run build:web` first; starts a mock server on :7790) |
 | `bun run dev` | Service in mock mode on :7744 serving `apps/web/dist` |
-| `bun run build` | Compile single executables for linux-x64 and windows-x64 into `out/` |
+| `bun run build` | Compile single executables into `out/linux` and `out/windows`, with their installers (release folders) |
+| `bun scripts/wine-smoke.ts` | Optional: run the Windows `.exe` under Wine (mock + registry-based real scan, CLI tools) |
+| `COUCH_MOCK=1 bun apps/server/src/main.ts doctor` | Doctor against fixtures |
+| `scripts/commit-phase.sh "msg"` | Run the full check; commit and push only if green |
 | `bun run fixtures` | Regenerate `fixtures/` (deterministic; commit the result) |
 | `bun run format` | Apply biome formatting |
 
@@ -38,6 +41,13 @@ After any context compaction, re-read `docs/BRIEF.md`, this file, `docs/DESIGN.m
 - Every decision where the brief is silent or wrong goes into `docs/DECISIONS.md` with a date.
 - Commit and push at the end of every phase with `check` green; record acceptance evidence in `docs/DESIGN.md`.
 
+## Testing notes
+
+- `apps/server/test/helpers.ts` → `makeTestApp({platformId, configure})` wires fixtures exactly like mock mode (virtual Steam mounts, mock Jellyfin, recording process runner, instant sleep).
+- Playwright tests start one mock server for the whole run; every test calls `reset(page)` (`POST /api/mock/reset`). `/api/mock/*` exists only in mock mode.
+- `press(page, key)` asserts a focused element exists after every key press. `tenfoot.ts` audits font size, contrast, safe area, focus ring, scroll bars and hover rules.
+- Optional tools: `strace` (syscall no-write test), `pwsh` (install.ps1 dry run), `wine` (smoke). Tests skip cleanly without them.
+
 ## Environment variables
 
-`COUCH_MOCK=1` (fixtures, recorded launches), `COUCH_NOW=<iso>` (pin clock), `COUCH_CONFIG_DIR`, `COUCH_DATA_DIR`, `COUCH_PORT`.
+`COUCH_MOCK=1` (fixtures, recorded launches), `COUCH_NOW=<iso>` (pin clock), `COUCH_CONFIG_DIR`, `COUCH_DATA_DIR`, `COUCH_PORT`, `COUCH_FIXTURES_DIR`, `COUCH_JELLYFIN_API_KEY` (read by `configure`).

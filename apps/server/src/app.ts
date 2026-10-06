@@ -64,6 +64,8 @@ export interface AppDeps {
     art: FetchFn | null;
   };
   web?: WebAssets;
+  /** Shown in Settings so people know where the URL and API key go. */
+  configFile?: string;
   /** Injectable sleep (tests make waiting instant). */
   sleep?: (ms: number) => Promise<void>;
   /** Mock mode only: handles for simulating outages from UI tests. */
@@ -184,6 +186,7 @@ export function createApp(deps: AppDeps): App {
         checkedAt: md.lastFetchAt,
       },
       uiScale: uiScale(),
+      configFile: deps.configFile ?? null,
     };
     return json(body);
   });
@@ -449,6 +452,22 @@ export function createApp(deps: AppDeps): App {
     if (!profile) return errorJson(400, "unknown profile");
     store.addSuggestionEvents([{ ts: nowIso(), profileId: profile.id, itemKey: b.key, action: "accepted" }]);
     return json({ ok: true });
+  });
+
+  router.post("/api/rescan", async () => {
+    const scan = await library.steam(true);
+    await jellyfin?.getRows(true);
+    void metadata.refresh(scan.games.map((g) => g.appId)).catch(() => {});
+    return json({ ok: true, steam: library.steamStatus() });
+  });
+
+  router.post("/api/settings", async (req) => {
+    const b = (await readJson(req)) as { uiScale?: unknown } | undefined;
+    if (typeof b?.uiScale !== "number" || !Number.isFinite(b.uiScale))
+      return errorJson(400, "uiScale must be a number");
+    const scale = Math.round(Math.min(1.5, Math.max(0.75, b.uiScale)) * 100) / 100;
+    store.setSetting("ui.scale", String(scale));
+    return json({ uiScale: scale });
   });
 
   router.get("/api/hidden", async () => {

@@ -4,12 +4,12 @@
  * Checks: `version`, `serve` in mock mode answers /api/status with platform "windows",
  * and the UI is served. Extra checks are added per phase (see docs/DESIGN.md).
  */
-import { cpSync, existsSync, mkdirSync, rmSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
 const repo = path.resolve(import.meta.dir, "..");
-const exe = path.join(repo, "out", "couch-launcher-windows-x64.exe");
+const exe = path.join(repo, "out", "windows", "couch-launcher-windows-x64.exe");
 const prefix = process.env.WINEPREFIX || path.join(os.tmpdir(), "couch-launcher-wineprefix");
 mkdirSync(prefix, { recursive: true });
 const env = { ...process.env, WINEPREFIX: prefix, WINEDEBUG: "-all" };
@@ -19,7 +19,7 @@ if (!Bun.which("wine")) {
   process.exit(0);
 }
 if (!existsSync(exe)) {
-  console.error("missing out/couch-launcher-windows-x64.exe; run `bun run build --target windows`");
+  console.error("missing out/windows/couch-launcher-windows-x64.exe; run `bun run build --target windows`");
   process.exit(1);
 }
 
@@ -94,6 +94,15 @@ await withServer(
 );
 
 // 2. Real mode: a Steam install on the Wine C: and D: drives, found through the registry.
+// Start from no config and no data, like a fresh install.
+for (const sub of ["Roaming", "Local"])
+  rmSync(
+    path.join(prefix, "drive_c", "users", process.env.USER || "root", "AppData", sub, "couch-launcher"),
+    {
+      recursive: true,
+      force: true,
+    },
+  );
 const driveC = path.join(prefix, "drive_c");
 const steamDir = path.join(driveC, "Program Files (x86)", "Steam");
 const dDrive = path.join(prefix, "drive_d");
@@ -142,7 +151,56 @@ await withServer(7804, {}, async (base) => {
   check("real mode: 16 items", status.steam?.itemCount === 16, String(status.steam?.itemCount));
   const games = await getJson(`${base}/api/games`);
   check("real mode: /api/games lists 14 games", games.items?.length === 14, String(games.items?.length));
+  // The fixture Steam folder has no steam.exe: the Windows spawn fails and is reported, not thrown.
+  const res = await fetch(`${base}/api/launch/steam:620`, { method: "POST" });
+  const launch = (await res.json()) as { ok?: boolean; message?: string };
+  check(
+    "real mode: a failed launch is a readable error",
+    res.status === 502 &&
+      launch.ok === false &&
+      Boolean(launch.message?.startsWith("Couldn't ask Steam to start Portal 2")),
+    launch.message,
+  );
 });
+
+// 3. CLI tools on Windows: doctor (stdout and doctor.txt), configure, kiosk-command.
+const localApp = path.join(prefix, "drive_c", "users", process.env.USER || "root", "AppData");
+const doc = Bun.spawnSync(["wine", exe, "doctor"], { env, stdout: "pipe", stderr: "pipe" });
+const docOut = doc.stdout.toString();
+check(
+  "doctor finds the registry Steam root",
+  docOut.includes("Steam      OK  c:\\program files (x86)\\steam"),
+  docOut.split("\n").find((l) => l.startsWith("Steam")),
+);
+check("doctor reports Jellyfin not configured", docOut.includes("Jellyfin   NOT CONFIGURED"));
+const report = path.join(localApp, "Local", "couch-launcher", "doctor.txt");
+check(
+  "doctor writes doctor.txt to %LOCALAPPDATA%",
+  existsSync(report) && readFileSync(report, "utf8").includes("\r\n"),
+  report,
+);
+const conf = Bun.spawnSync(["wine", exe, "configure", "--jellyfin-url", "http://nas:8096"], {
+  env: { ...env, COUCH_JELLYFIN_API_KEY: "wine-secret" },
+  stdout: "pipe",
+});
+const cfgPath = path.join(localApp, "Roaming", "couch-launcher", "config.toml");
+const cfgText = existsSync(cfgPath) ? readFileSync(cfgPath, "utf8") : "";
+check(
+  "configure writes %APPDATA%\\couch-launcher\\config.toml",
+  cfgText.includes('url = "http://nas:8096"') && cfgText.includes('api_key = "wine-secret"'),
+);
+check("configure does not print the key", !conf.stdout.toString().includes("wine-secret"));
+const kiosk = JSON.parse(
+  Bun.spawnSync(["wine", exe, "kiosk-command"], { env, stdout: "pipe" }).stdout.toString() || "{}",
+) as {
+  cmd?: string;
+  args?: string[];
+};
+check(
+  "kiosk-command is Edge in app mode",
+  Boolean(kiosk.cmd?.endsWith("msedge.exe") && kiosk.args?.includes("--app=http://127.0.0.1:7744/")),
+  kiosk.cmd,
+);
 Bun.spawnSync(["wineserver", "-k"], { env });
 
 console.log(failed ? `\nwine smoke: ${failed} failed` : "\nwine smoke: all passed");

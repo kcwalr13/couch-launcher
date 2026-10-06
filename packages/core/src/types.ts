@@ -83,6 +83,8 @@ export interface StatusResponse {
   jellyfin: SourceStatus & { server: string | null; serverName: string | null; version: string | null };
   metadata: SourceStatus;
   uiScale: number;
+  /** Where the config file lives (secrets are edited there, never in the UI). null in mock mode. */
+  configFile: string | null;
 }
 
 export interface HomeResponse {

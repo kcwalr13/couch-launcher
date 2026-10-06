@@ -69,6 +69,30 @@ export function App({ initial }: AppProps) {
   // Save the screen and focus to the service (debounced) so a reload or a browser restart
   // after a game comes back to the same place.
   const saveKey = JSON.stringify([top.screen, top.params, top.focus.key]);
+  const latestTop = useRef(top);
+  latestTop.current = top;
+  // Flush at once when the page is hidden or unloaded (a game starting, a reload).
+  useEffect(() => {
+    const flush = () => {
+      const e = latestTop.current;
+      if (e.focus.key === null) return;
+      fetch("/api/ui-state", {
+        method: "PUT",
+        keepalive: true,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ screen: e.screen, focusedKey: e.focus.key, params: e.params }),
+      }).catch(() => {});
+    };
+    const onVis = () => {
+      if (document.visibilityState === "hidden") flush();
+    };
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
   // biome-ignore lint/correctness/useExhaustiveDependencies: saveKey captures what matters
   useEffect(() => {
     if (top.focus.key === null) return;

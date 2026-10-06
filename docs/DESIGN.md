@@ -105,6 +105,15 @@ Screen layouts:
 
 `packages/core/src/picker.ts` is pure. `pickTonight(candidates, context)` takes the profile-applied items and a context (time, mode, profile, weights, skips map, exclusions, page, now, UTC offset). It applies the hard filters (`excludedBecause`), scores the signals (`signalsFor`), ranks with a key tie-break, and builds the cards with reasons (`reasonFor`) and the seeded wildcard. The service (`POST /api/tonight`) adds history and answer persistence; the UI (`screens/Tonight.tsx`) is three one-press questions and then three cards plus "Show three more" and "Start over". See D-054 to D-057.
 
+### Packaging and install
+
+- `scripts/build.ts`: vite build, then the UI is embedded as base64, then `bun build --compile` for `bun-linux-x64` and `bun-windows-x64 --windows-hide-console`, then the release folders `out/linux` and `out/windows` are assembled (D-062).
+- `scripts/install.sh`: the six steps from the brief. `--dry-run` prints every command and changes nothing.
+- `scripts/couch-launcher.service`: the systemd user unit, `ExecStart=%h/.local/bin/couch-launcher serve`.
+- `scripts/install.ps1`: the six Windows steps. `-DryRun` prints them.
+- `steam-input/`: the key-mapped layout, as a binding table and as a VDF.
+- CLI: `serve`, `doctor`, `configure`, `kiosk-command`, `config-path`, `version`.
+
 ### Fixtures and mock mode
 
 `scripts/make-fixtures.ts` generates everything under `fixtures/` relative to `FIXTURE_NOW = 2026-10-03T19:00Z`:
@@ -230,3 +239,18 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
   - Skips are per profile.
 - **Other API checks**: answers persist and switch the active profile, accept is recorded, input is validated, and weights come from the config.
 - **UI** (`tonight.e2e.ts`): from Home, Tonight to a running pick takes 5 presses (A, A, A, A, A), within the brief's "at most five". Reroll gives new cards. B steps back through the questions. Last answers are preselected. The ten-foot audit covers the question and results screens at 1080p and 4K.
+
+### Phase 8 — Settings, polish, packaging
+
+- **Settings screen** (`settings.e2e.ts`): health cards for mock Steam (12 games, 4 shortcuts, 2 libraries) and Jellyfin (dxp2800 10.11.2), rescan, A+ / A− changing the root font size, the screen restored after a reload, unhiding a hidden game, and a Jellyfin outage shown as "Can't reach it". Settings is included in the ten-foot audit at 1080p and 4K.
+- **`doctor`** (`phase8.test.ts`): in mock mode it reports no problems and creates no data directory. On a machine with nothing installed it reports the problems and creates no config file. Under Wine with the Windows build it finds the Steam root through the registry and writes `doctor.txt` with CRLF line endings.
+- **`install.sh --dry-run` prints every step** (`install-sh.test.ts`): all six steps and their commands are printed, and the scratch home stays empty. A real run with stand-ins for `systemctl` and `flatpak` checks:
+  - the binary is installed and executable
+  - the config holds the URL and key, has mode 0600, and the key is never printed
+  - the unit file is identical to the repo copy, and `daemon-reload` and `enable --now` were called
+  - the Chromium override uses `--device=input`, or `--device=all` with Flatpak 1.14
+  - the kiosk wrapper is written, and doctor ran
+- **`install.ps1`** (`install-ps1.test.ts`, with pwsh): parses with no errors, and `-DryRun` prints all six steps (Run key, `.lnk`, Steam steps) and creates nothing.
+- **Warm `GET /api/home` under 200 ms on fixtures**: measured over real HTTP (`Bun.serve`), 20 warm requests, median about 1 ms and worst about 2 ms in the VM. The test asserts the worst is under 200 ms.
+- **A fresh clone builds one executable per platform**: see the evidence block below.
+- **Wine smoke** (`scripts/wine-smoke.ts`, 18 checks): mock and real-mode scans, the API, the embedded UI, a failed launch reported as a message, doctor, configure writing `%APPDATA%`, and kiosk-command naming Edge.

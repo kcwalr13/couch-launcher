@@ -275,3 +275,30 @@ Ties break on the item key. A reason is the top two positive signals by score, w
 **D-056 — History** (2026-10-06, P7). Every returned card is recorded as `shown`. Rerolling sends the previous page's keys as `skipped`, which are recorded, and all keys shown so far as `exclude`. Choosing a card records `accepted`, then launches it. Skips older than 7 days are ignored, and skips are per profile.
 
 **D-057 — Answers** (2026-10-06, P7). The last answers are stored in `app_setting` (`tonight.last`) and preselected and focused on each question; the defaults are 1 hour, the active profile, and either. Answering "Who is here?" also makes that profile active, since the people on the couch are the same. B steps back through the questions.
+
+## Phase 8: Settings, polish, packaging
+
+**D-058 — Settings** (2026-10-06, P8). Settings shows a health card each for Steam and Jellyfin (state, detail, paths, and where the config file lives), and an action row: Rescan library, text size A− / A+ (0.75–1.5 in steps of 0.05), and Profiles. Below them is the profile's hidden items, each of which can be unhidden. Text size is stored in `app_setting`, applied at once through the `--ui-scale` CSS variable, and overrides `ui.scale` without rewriting the config file. Secrets are never shown or editable in the UI. The state markers (●, ▲, ✕, ○) are shapes, so state is never conveyed by colour alone.
+
+**D-059 — `doctor`** (2026-10-06, P8). The read-only boot creates no config file, uses an in-memory database, and its logger is quiet. `doctor` reports config warnings, the data directory, whether the service is running, each Steam root candidate tried, the user, libraries (flagging any not mounted), counts, Jellyfin status, the playback client, the kiosk command, and the kiosk's own shortcut id (used for `kiosk.restart_command`). It exits 1 when it finds a problem.
+
+**D-060 — Installer helpers live in the executable** (2026-10-06, P8). `couch-launcher configure`, `kiosk-command [--shell]` and `config-path` keep paths and commands in one place, the platform module, so the shell and PowerShell scripts never duplicate them. `configure` edits only the `[jellyfin]` keys in place and keeps the file's comments. It reads the API key from `COUCH_JELLYFIN_API_KEY`, so the key never appears in a process list, and writes the file with mode 0600.
+
+**D-061 — Windows installer details** (2026-10-06, P8).
+- The executable has the GUI subsystem, so `install.ps1` calls it with `Start-Process -Wait -RedirectStandardOutput` to capture output.
+- Sign-in start uses the `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\CouchLauncher` value `"<exe>" serve`.
+- `.lnk` shortcuts on the Desktop and in the Start menu are created through `WScript.Shell`.
+- The script is written for Windows PowerShell 5.1: no `??`, no ternaries.
+- It was parsed and dry-run with PowerShell 7.4 on Linux. PSScriptAnalyzer could not be installed because PowerShell Gallery is blocked from the VM.
+
+**D-062 — Release layout** (2026-10-06, P8). `bun run build` produces two release folders:
+- `out/linux/`: executable, `install.sh`, `couch-launcher.service`, `steam-input/`, `README.md`, `ON_DEVICE.md`
+- `out/windows/`: executable, `install.ps1`, `README.md`, `ON_DEVICE.md`
+
+Each installer finds the executable next to itself.
+
+**D-063 — Steam Input layout delivery** (2026-10-06, P8). Steam only loads layouts from its own folders, and the brief forbids writing Steam's files, so the layout ships as a binding table with step-by-step instructions (`steam-input/README.md`). The equivalent `controller_mappings` VDF is included for reference and is parsed in a test. Whether Steam accepts that exact file is on the on-device list.
+
+**D-064 — UI state flush on hide** (2026-10-06, P8). Besides the 250 ms debounced save, the UI flushes its screen and focus with a `keepalive` PUT on `pagehide` and on `visibilitychange` to hidden. The state is therefore current at the moment a game takes over, or if the browser is killed by the restart mitigation.
+
+**D-065 — Optional dev tools installed in the VM** (2026-10-06, P8). Wine 9.0 (apt) and PowerShell 7.4.6 (GitHub release tarball under `/opt/pwsh`) were installed to exercise the Windows build and installer. Tests that need them skip cleanly when they are missing (`install-ps1.test.ts`; `scripts/wine-smoke.ts` is run by hand). `bun run check` needs neither.

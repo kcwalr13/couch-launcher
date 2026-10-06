@@ -35,24 +35,46 @@ export interface Booted {
   port: number;
   host: string;
   mock: boolean;
+  configFile?: string;
+  configWarnings: string[];
+  configFound: boolean;
+  dataDir: string;
+}
+
+export interface BootOptions {
+  quietLog?: boolean;
+  /** doctor: create nothing (no config file, in-memory database). */
+  readOnly?: boolean;
 }
 
 export async function bootstrap(
   env: Record<string, string | undefined>,
-  opts: { quietLog?: boolean } = {},
+  opts: BootOptions = {},
 ): Promise<Booted> {
-  const log = createLogger({ quiet: opts.quietLog });
+  const log = createLogger({ quiet: opts.quietLog || opts.readOnly });
   const mock = env.COUCH_MOCK === "1" || env.COUCH_MOCK === "true";
   const platform = hostPlatform();
   const P = platform.path;
 
   // Config. Mock mode without an explicit config dir uses defaults and writes nothing.
   let config: Config;
+  let configFile: string | undefined;
+  let configWarnings: string[] = [];
+  let configFound = false;
   if (mock && !env.COUCH_CONFIG_DIR) {
     config = parseConfig({}).config;
   } else {
     const dir = env.COUCH_CONFIG_DIR || platform.configDir();
-    const r = loadConfigFile(P.join(dir, "config.toml"), dir, nodeConfigFs);
+    configFile = P.join(dir, "config.toml");
+    const fsForConfig = opts.readOnly
+      ? { ...nodeConfigFs, writeText: () => {}, mkdirp: () => {} }
+      : nodeConfigFs;
+    configFound = nodeConfigFs.exists(configFile);
+    const r =
+      opts.readOnly && !configFound
+        ? { ...parseConfig({}), created: false, path: configFile }
+        : loadConfigFile(configFile, dir, fsForConfig);
+    configWarnings = r.warnings;
     if (r.created) log.info(`created ${r.path} with defaults`);
     for (const w of r.warnings) log.warn(`config: ${w}`);
     config = r.config;
@@ -61,8 +83,8 @@ export async function bootstrap(
   if (env.COUCH_PORT) config.server.port = Number(env.COUCH_PORT);
 
   const dataDir = env.COUCH_DATA_DIR || (mock ? P.join(platform.dataDir(), "mock") : platform.dataDir());
-  mkdirSync(dataDir, { recursive: true });
-  const store = new Store(P.join(dataDir, "couch-launcher.sqlite"));
+  if (!opts.readOnly) mkdirSync(dataDir, { recursive: true });
+  const store = new Store(opts.readOnly ? ":memory:" : P.join(dataDir, "couch-launcher.sqlite"));
 
   const clock: Clock = env.COUCH_NOW ? fixedClock(env.COUCH_NOW) : systemClock;
 
@@ -104,6 +126,7 @@ export async function bootstrap(
     log,
     mock,
     dataDir,
+    configFile,
     mockControls,
     net: {
       store: storeFetch,
@@ -111,7 +134,20 @@ export async function bootstrap(
       art: mock ? null : (globalThis.fetch as unknown as AppDeps["net"]["store"]),
     },
   });
-  return { app, config, platform, store, log, port: config.server.port, host: config.server.host, mock };
+  return {
+    app,
+    config,
+    platform,
+    store,
+    log,
+    port: config.server.port,
+    host: config.server.host,
+    mock,
+    configFile,
+    configWarnings,
+    configFound,
+    dataDir,
+  };
 }
 
 /** Mock-mode process runner: logs and records every command instead of running it. */

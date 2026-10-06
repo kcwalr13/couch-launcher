@@ -68,6 +68,14 @@ const SCREENS: { name: string; go: (p: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: "settings",
+    go: async (p) => {
+      await p.request.post("/api/prefs", { data: { key: "steam:620", hidden: true } });
+      await press(p, "s");
+      await settle(p);
+    },
+  },
+  {
     name: "profiles",
     go: async (p) => {
       await press(p, "ArrowRight", 3);
