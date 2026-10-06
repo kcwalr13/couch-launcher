@@ -43,6 +43,18 @@ kiosk browser ──HTTP──> local service ──read-only──> Steam files
 
 `services/library.ts` caches the scan (15 s TTL), filters runtimes and utility shortcuts, overlays per-profile prefs, and sorts.
 
+### Jellyfin adapter
+
+`adapters/jellyfin/client.ts` is the REST client: it builds the auth header, applies timeouts and classifies errors. `adapters/jellyfin/jellyfin.ts` (`JellyfinSource`) does the rest:
+- picks the user
+- fetches the rows in parallel and maps each item to a `UnifiedItem` with key `jellyfin:<Id>`, kind movie or episode, subtitle `S2:E4 · Title` or `2016 · PG-13 · 1 h 56 min`, progress and launch position
+- caches the rows (D-033)
+- reports status (D-034)
+- fetches images
+- provides the remote-control calls the handoff uses (`sessions`, `play`, `webUrl`)
+
+`GET /api/watch` applies the active profile's hidden items.
+
 ### Fixtures and mock mode
 
 `scripts/make-fixtures.ts` generates everything under `fixtures/` relative to `FIXTURE_NOW = 2026-10-03T19:00Z`:
@@ -92,3 +104,12 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
 - **Windows runtime (Wine)**: `scripts/wine-smoke.ts`, run with the cross-compiled `.exe`:
   - Mock mode: fixtures at `C:\Program Files (x86)\Steam`, 16 items.
   - Real mode: fixtures copied onto the Wine C: and D: drives. The Steam root comes from `HKCU\Software\Valve\Steam\SteamPath` through the real `reg.exe`, both libraries are found, and `/api/games` lists 14 games.
+
+### Phase 3 — Jellyfin adapter
+
+- **Fixture responses map to unified items**: `jellyfin-adapter.test.ts` checks all four rows, including order, titles, subtitles, progress, launch position, dates, genres, list membership and art URLs. It also checks that unsupported types are dropped, that the user is auto-detected and sent on every call, and that a configured user skips the lookup.
+- **Server unreachable**:
+  - With a previous fetch, status reports `unreachable` ("showing cached items") and `/api/watch` returns the SQLite-cached rows with `cached: true`.
+  - With no cache, status is `unreachable` and every row is empty. The UI's empty state is covered in Phase 4.
+- **Bad API key**: status is `degraded`, "Jellyfin rejected the API key". The key does not appear in responses or logs.
+- **Images**: movie poster, series backdrop for episodes, and `null` when no image exists (Shōgun).

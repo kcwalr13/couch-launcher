@@ -2,8 +2,10 @@
  * The local service: wires config, platform, store and adapters into the HTTP API.
  * `createApp` has no global state, so tests create as many as they like.
  */
-import type { GameSort, GamesResponse, StatusResponse } from "@couch/core";
+import os from "node:os";
+import type { GameSort, GamesResponse, StatusResponse, WatchResponse } from "@couch/core";
 import type { FetchFn } from "./adapters/jellyfin/client.ts";
+import { JellyfinSource, watchRows } from "./adapters/jellyfin/jellyfin.ts";
 import { StoreMetadata } from "./adapters/steam/store-metadata.ts";
 import type { Clock } from "./clock.ts";
 import type { Config } from "./config.ts";
@@ -32,6 +34,8 @@ export interface AppDeps {
   net: {
     /** Steam store metadata. null = offline. */
     store: FetchFn | null;
+    /** Jellyfin server. */
+    jellyfin: FetchFn;
   };
   web?: WebAssets;
 }
@@ -41,6 +45,7 @@ export interface App {
   deps: AppDeps;
   library: Library;
   metadata: StoreMetadata;
+  jellyfin: JellyfinSource | null;
 }
 
 const SORTS: GameSort[] = ["recent", "az", "playtime"];
@@ -59,6 +64,41 @@ export function createApp(deps: AppDeps): App {
   });
   const library = new Library({ config, platform, steamFs: deps.steamFs, store, clock, log, metadata, mock });
 
+  let deviceId = store.getSetting("device.id");
+  if (!deviceId) {
+    deviceId = crypto.randomUUID();
+    store.setSetting("device.id", deviceId);
+  }
+  const jellyfin =
+    config.jellyfin.url && config.jellyfin.api_key
+      ? new JellyfinSource({
+          url: config.jellyfin.url,
+          apiKey: config.jellyfin.api_key,
+          userId: config.jellyfin.user_id,
+          fetch: deps.net.jellyfin,
+          store,
+          clock,
+          log,
+          deviceId,
+          deviceName: `Couch Launcher (${os.hostname()})`,
+          mock,
+        })
+      : null;
+
+  const jellyfinStatus = async (): Promise<StatusResponse["jellyfin"]> => {
+    if (!jellyfin)
+      return {
+        state: "not_configured",
+        detail: config.jellyfin.url ? "No API key in config.toml" : "No server URL in config.toml",
+        itemCount: 0,
+        checkedAt: null,
+        server: config.jellyfin.url || null,
+        serverName: null,
+        version: null,
+      };
+    return jellyfin.status();
+  };
+
   const nowIso = () => clock.now().toISOString();
   const uiScale = () => {
     const s = Number(store.getSetting("ui.scale"));
@@ -74,19 +114,7 @@ export function createApp(deps: AppDeps): App {
       platform: platform.id,
       now: nowIso(),
       steam: library.steamStatus(),
-      jellyfin: {
-        state: mock ? "mock" : config.jellyfin.url ? "degraded" : "not_configured",
-        detail: mock
-          ? "Mock mode: fixture server"
-          : config.jellyfin.url
-            ? "Not checked yet"
-            : "No server URL in config",
-        itemCount: 0,
-        checkedAt: null,
-        server: mock ? "mock" : config.jellyfin.url || null,
-        serverName: null,
-        version: null,
-      },
+      jellyfin: await jellyfinStatus(),
       metadata: {
         state: mock ? "mock" : md.offline ? "degraded" : "ok",
         detail: md.lastError ?? `${md.cached} apps cached${md.pending ? `, ${md.pending} pending` : ""}`,
@@ -116,9 +144,36 @@ export function createApp(deps: AppDeps): App {
     return json(body);
   });
 
+  router.get("/api/watch", async () => {
+    const profile = store.activeProfile();
+    if (!jellyfin) {
+      const body: WatchResponse = {
+        now: nowIso(),
+        status: "not_configured",
+        cached: false,
+        rows: watchRows(null),
+      };
+      return json(body);
+    }
+    const { rows, cached } = await jellyfin.getRows();
+    const prefs = store.prefs(profile.id);
+    const visible = watchRows(rows).map((r) => ({
+      ...r,
+      items: applyPrefs(r.items, prefs).filter((i) => !i.hidden),
+    }));
+    const body: WatchResponse = {
+      now: nowIso(),
+      status: rows && !cached ? (mock ? "mock" : "ok") : "unreachable",
+      cached,
+      rows: visible,
+    };
+    return json(body);
+  });
+
   return {
     deps,
     library,
+    jellyfin,
     metadata,
     async fetch(req: Request): Promise<Response> {
       const url = new URL(req.url);

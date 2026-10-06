@@ -17,10 +17,10 @@
       "SeasonId": "19f72c0c0f1a8dfd224de08f06b404b9",
       "SeasonName": "Season 2",
       "SeriesPrimaryImageTag": "28967e7b3ce8e4884482cbfa3c15c8b9",
-      "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
       "ParentBackdropImageTags": [
         "28967e7b3ce8e4884482cbfa3c15c8b9"
       ],
+      "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
       "UserData": {
         "PlaybackPositionTicks": 6000000000,
         "PlayCount": 0,

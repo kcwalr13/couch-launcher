@@ -717,6 +717,7 @@ interface ShowSpec {
     played?: boolean;
   }[];
   overview: string;
+  art?: boolean;
 }
 
 const SHOWS: ShowSpec[] = [
@@ -755,6 +756,7 @@ const SHOWS: ShowSpec[] = [
   {
     name: "Shōgun",
     year: 2024,
+    art: false,
     episodeMinutes: 60,
     overview:
       "Lord Yoshii Toranaga fights for his life as his enemies on the Council of Regents unite against him.",
@@ -822,9 +824,8 @@ function episodeDto(show: ShowSpec, ep: ShowSpec["episodes"][number]) {
     SeriesId: seriesId,
     SeasonId: jid(`season:${show.name}:${ep.s}`),
     SeasonName: `Season ${ep.s}`,
-    SeriesPrimaryImageTag: stag,
+    ...(show.art === false ? {} : { SeriesPrimaryImageTag: stag, ParentBackdropImageTags: [stag] }),
     ParentBackdropItemId: seriesId,
-    ParentBackdropImageTags: [stag],
     UserData: {
       PlaybackPositionTicks: (ep.positionMin ?? 0) * 60 * TICKS,
       PlayCount: ep.played ? 1 : 0,
@@ -925,7 +926,7 @@ function makeJellyfin() {
   }
   for (const s of SHOWS) {
     const id = jid(`series:${s.name}`);
-    if (s.name === "Shōgun") continue; // no art: text fallback
+    if (s.art === false) continue; // no art: text fallback
     write(`jellyfin/images/${id}-Primary.png`, png(`${s.name}-jp`, ...POSTER));
     write(`jellyfin/images/${id}-Backdrop.png`, png(`${s.name}-jb`, ...HERO));
   }

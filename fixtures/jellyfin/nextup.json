@@ -17,10 +17,10 @@
       "SeasonId": "4b21ca9aff32213bdf53f1ad79bcfb55",
       "SeasonName": "Season 3",
       "SeriesPrimaryImageTag": "421ace2211324b935ae4918f18e70e3f",
-      "ParentBackdropItemId": "d5ca236ddb3593ca8f27f98abb794a95",
       "ParentBackdropImageTags": [
         "421ace2211324b935ae4918f18e70e3f"
       ],
+      "ParentBackdropItemId": "d5ca236ddb3593ca8f27f98abb794a95",
       "UserData": {
         "PlaybackPositionTicks": 0,
         "PlayCount": 0,

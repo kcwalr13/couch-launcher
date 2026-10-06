@@ -7,6 +7,7 @@ import { Store } from "./db.ts";
 import { createLogger, type Logger } from "./log.ts";
 import { mockStoreFetch } from "./mock/fetch.ts";
 import { fixturesDir, steamFixtureFs } from "./mock/fixtures.ts";
+import { MOCK_JELLYFIN_KEY, MOCK_JELLYFIN_URL, mockJellyfin } from "./mock/jellyfin.ts";
 import {
   createPlatform,
   hostPlatform,
@@ -71,6 +72,7 @@ export async function bootstrap(
   let steamFs: ReadFs = nodeReadFs;
   let proc: ProcessRunner = realProcessRunner;
   let storeFetch = globalThis.fetch as unknown as AppDeps["net"]["store"];
+  let jellyfinFetch = globalThis.fetch as unknown as AppDeps["net"]["jellyfin"];
   if (mock) {
     const fx = fixturesDir(env);
     const id = hostPlatformId();
@@ -83,6 +85,11 @@ export async function bootstrap(
       proc,
     });
     storeFetch = mockStoreFetch(fx);
+    jellyfinFetch = mockJellyfin(fx).fetch;
+    if (!config.jellyfin.url) {
+      config.jellyfin.url = MOCK_JELLYFIN_URL;
+      config.jellyfin.api_key = MOCK_JELLYFIN_KEY;
+    }
   }
   const app = createApp({
     config,
@@ -94,7 +101,7 @@ export async function bootstrap(
     log,
     mock,
     dataDir,
-    net: { store: storeFetch },
+    net: { store: storeFetch, jellyfin: jellyfinFetch },
   });
   return { app, config, platform, store, log, port: config.server.port, host: config.server.host, mock };
 }

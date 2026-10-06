@@ -8,6 +8,12 @@ import { Store } from "../src/db.ts";
 import { createLogger } from "../src/log.ts";
 import { mockStoreFetch } from "../src/mock/fetch.ts";
 import { steamFixtureFs } from "../src/mock/fixtures.ts";
+import {
+  MOCK_JELLYFIN_KEY,
+  MOCK_JELLYFIN_URL,
+  type MockJellyfin,
+  mockJellyfin,
+} from "../src/mock/jellyfin.ts";
 import { createPlatform } from "../src/platform/index.ts";
 import type {
   Command,
@@ -140,10 +146,13 @@ export function fixtureDeps(id: PlatformId = "linux") {
 
 export function makeTestApp(
   over: Partial<AppDeps> & { configure?: (c: Config) => void; platformId?: PlatformId } = {},
-): TestApp & { proc: RecordingProc } {
+): TestApp & { proc: RecordingProc; jf: MockJellyfin } {
   const t = tempDir();
   const config = defaultConfig();
+  config.jellyfin.url = MOCK_JELLYFIN_URL;
+  config.jellyfin.api_key = MOCK_JELLYFIN_KEY;
   over.configure?.(config);
+  const jf = mockJellyfin(FIXTURES);
   const fx = fixtureDeps(over.platformId ?? "linux");
   const deps: AppDeps = {
     config,
@@ -155,7 +164,7 @@ export function makeTestApp(
     log: createLogger({ quiet: true, capture: true }),
     mock: true,
     dataDir: t.dir,
-    net: { store: mockStoreFetch(FIXTURES) },
+    net: { store: mockStoreFetch(FIXTURES), jellyfin: jf.fetch },
     ...over,
   };
   const app = createApp(deps);
@@ -164,6 +173,7 @@ export function makeTestApp(
     app,
     deps,
     proc: deps.proc as RecordingProc,
+    jf,
     cleanup: () => {
       deps.store.close();
       t.cleanup();

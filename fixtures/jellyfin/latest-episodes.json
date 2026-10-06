@@ -16,10 +16,10 @@
     "SeasonId": "e217b8131b56f39046dc42ba07d20dcd",
     "SeasonName": "Season 4",
     "SeriesPrimaryImageTag": "85250ee05c563cf950d37e77bb2fb1a5",
-    "ParentBackdropItemId": "1db852553f29cfc208a62c88116c31c5",
     "ParentBackdropImageTags": [
       "85250ee05c563cf950d37e77bb2fb1a5"
     ],
+    "ParentBackdropItemId": "1db852553f29cfc208a62c88116c31c5",
     "UserData": {
       "PlaybackPositionTicks": 0,
       "PlayCount": 0,
@@ -49,10 +49,10 @@
     "SeasonId": "e217b8131b56f39046dc42ba07d20dcd",
     "SeasonName": "Season 4",
     "SeriesPrimaryImageTag": "85250ee05c563cf950d37e77bb2fb1a5",
-    "ParentBackdropItemId": "1db852553f29cfc208a62c88116c31c5",
     "ParentBackdropImageTags": [
       "85250ee05c563cf950d37e77bb2fb1a5"
     ],
+    "ParentBackdropItemId": "1db852553f29cfc208a62c88116c31c5",
     "UserData": {
       "PlaybackPositionTicks": 0,
       "PlayCount": 0,
@@ -81,11 +81,7 @@
     "SeriesId": "7353599a45363e3b12ed2d4b73de3c73",
     "SeasonId": "b29035cb0104dc38492b518a3cedb791",
     "SeasonName": "Season 1",
-    "SeriesPrimaryImageTag": "b3a19e83676cb5e0fa178118b6eba3d5",
     "ParentBackdropItemId": "7353599a45363e3b12ed2d4b73de3c73",
-    "ParentBackdropImageTags": [
-      "b3a19e83676cb5e0fa178118b6eba3d5"
-    ],
     "UserData": {
       "PlaybackPositionTicks": 0,
       "PlayCount": 0,
@@ -115,10 +111,10 @@
     "SeasonId": "19f72c0c0f1a8dfd224de08f06b404b9",
     "SeasonName": "Season 2",
     "SeriesPrimaryImageTag": "28967e7b3ce8e4884482cbfa3c15c8b9",
-    "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
     "ParentBackdropImageTags": [
       "28967e7b3ce8e4884482cbfa3c15c8b9"
     ],
+    "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
     "UserData": {
       "PlaybackPositionTicks": 6000000000,
       "PlayCount": 0,
@@ -150,10 +146,10 @@
     "SeasonId": "19f72c0c0f1a8dfd224de08f06b404b9",
     "SeasonName": "Season 2",
     "SeriesPrimaryImageTag": "28967e7b3ce8e4884482cbfa3c15c8b9",
-    "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
     "ParentBackdropImageTags": [
       "28967e7b3ce8e4884482cbfa3c15c8b9"
     ],
+    "ParentBackdropItemId": "5360c7e0045a77f9712cead3012a48a5",
     "UserData": {
       "PlaybackPositionTicks": 0,
       "PlayCount": 0,
@@ -183,10 +179,10 @@
     "SeasonId": "4b21ca9aff32213bdf53f1ad79bcfb55",
     "SeasonName": "Season 3",
     "SeriesPrimaryImageTag": "421ace2211324b935ae4918f18e70e3f",
-    "ParentBackdropItemId": "d5ca236ddb3593ca8f27f98abb794a95",
     "ParentBackdropImageTags": [
       "421ace2211324b935ae4918f18e70e3f"
     ],
+    "ParentBackdropItemId": "d5ca236ddb3593ca8f27f98abb794a95",
     "UserData": {
       "PlaybackPositionTicks": 0,
       "PlayCount": 0,

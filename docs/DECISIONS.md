@@ -140,3 +140,26 @@ Playtime, last played, shortcuts and grid art all come from the chosen user.
 **D-029 — Mock mode mounts fixtures at virtual paths** (2026-10-06, P2). `mock/mapped-fs.ts` presents `fixtures/steam/root` and `library2` at `/home/deck/.local/share/Steam` and `/run/media/deck/SD/SteamLibrary` on Linux, or at `C:\Program Files (x86)\Steam` and `D:\SteamLibrary` on Windows. On Windows, `libraryfolders.vdf` is swapped for a copy with Windows paths. The real adapter and the real platform implementation then run unchanged, and launches go to a recording runner.
 
 **D-030 — Fixture images** (2026-10-06, P2). Fixture art is small abstract PNGs drawn by the generator: deterministic, with no fonts and no copyrighted art. Some are saved under Steam's `.jpg` names, so the art proxy detects the image type from magic bytes rather than the file extension.
+
+## Phase 3: Jellyfin adapter
+
+**D-031 — Jellyfin user when `user_id` is blank** (2026-10-06, P3). An API key carries no user, so the first enabled user from `GET /Users` is used and logged. Households with several users should set `jellyfin.user_id`; the README says so.
+
+**D-032 — What each Watch row contains** (2026-10-06, P3).
+- **Continue Watching:** `/UserItems/Resume`, video only.
+- **Next Up:** `/Shows/NextUp` with `enableResumable=false`.
+- **Recently Added Movies:** `/Items/Latest?includeItemTypes=Movie`, minus played ones.
+- **Recently Added Shows:** `/Items/Latest?includeItemTypes=Episode&groupItems=false`, reduced to the newest unplayed episode per series. Each tile is then directly playable, which a grouped Series or Season tile would not be.
+
+The picker additionally uses `/Items?includeItemTypes=Movie&isPlayed=false&recursive=true`, the 200 newest unwatched movies.
+
+**D-033 — Jellyfin caching** (2026-10-06, P3). The mapped rows, with image references but no image bytes, are stored in `metadata_cache` (`jellyfin:rows`) after every successful fetch, and kept in memory for 30 s. When the server is unreachable, Watch serves the SQLite copy and flags it `cached`; with no copy it shows empty rows. A random device id is generated once and stored in `app_setting`; Jellyfin uses it to tell clients apart.
+
+**D-034 — Jellyfin status** (2026-10-06, P3).
+- **Reachability:** `GET /System/Info/Public`, which needs no auth and gives the server name and version.
+- **Auth:** checked by the authenticated row fetch.
+- **States:** `unreachable` (network), `degraded` (key rejected or HTTP error), `ok`, `not_configured`, or `mock`.
+
+**D-035 — Episode art** (2026-10-06, P3). Episodes use the series poster (`SeriesId` + `SeriesPrimaryImageTag`) and the series backdrop (`ParentBackdropItemId`), because episode stills are 16:9 thumbnails that look wrong in poster tiles. A 404 from the image endpoint counts as "no art", and the UI shows the text fallback.
+
+**D-036 — The mock Jellyfin server checks auth** (2026-10-06, P3). `mock/jellyfin.ts` rejects requests that lack the `MediaBrowser … Token="…"` header, records remote-control calls, and can simulate an outage (`down`) or a client that is slow to start (`sessionsDelay`).
