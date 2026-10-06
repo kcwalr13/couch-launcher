@@ -53,6 +53,14 @@ const SCREENS: { name: string; go: (p: Page) => Promise<void> }[] = [
     },
   },
   {
+    name: "profiles",
+    go: async (p) => {
+      await press(p, "ArrowRight", 3);
+      await press(p, "Enter");
+      await settle(p);
+    },
+  },
+  {
     name: "options",
     go: async (p) => {
       await press(p, "ArrowDown");

@@ -92,6 +92,13 @@ export function useFocusScope(o: ScopeOptions): { focusedKey: string | null } {
     return () => {
       const i = scopeStack.indexOf(entry);
       if (i >= 0) scopeStack.splice(i, 1);
+      // A modal closed: give DOM focus back to the focused element of the scope underneath.
+      requestAnimationFrame(() => {
+        const active = document.activeElement as HTMLElement | null;
+        if (active?.isConnected && active.dataset.focused === "true") return;
+        const candidates = document.querySelectorAll<HTMLElement>("[data-focused='true']");
+        candidates[candidates.length - 1]?.focus({ preventScroll: true });
+      });
     };
   }, [enabled]);
 

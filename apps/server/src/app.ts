@@ -13,7 +13,7 @@ import type {
   UnifiedItem,
   WatchResponse,
 } from "@couch/core";
-import { byRecentActivity, parseKey } from "@couch/core";
+import { byRecentActivity, isGameKey, parseKey, type SessionLength } from "@couch/core";
 import type { FetchFn } from "./adapters/jellyfin/client.ts";
 import { allMediaItems, JellyfinSource, watchRows } from "./adapters/jellyfin/jellyfin.ts";
 import { StoreMetadata } from "./adapters/steam/store-metadata.ts";
@@ -320,6 +320,41 @@ export function createApp(deps: AppDeps): App {
   }
 
   router.get("/api/profiles", () => json({ profiles: store.profiles(), active: store.activeProfile() }));
+
+  router.post("/api/profiles", async (req) => {
+    const b = (await readJson(req)) as { id?: unknown } | undefined;
+    if (typeof b?.id !== "number" || !store.setActiveProfile(b.id)) return errorJson(400, "unknown profile");
+    return json({ profiles: store.profiles(), active: store.activeProfile() });
+  });
+
+  router.post("/api/prefs", async (req) => {
+    const b = (await readJson(req)) as Record<string, unknown> | undefined;
+    if (!b || typeof b.key !== "string" || !parseKey(b.key)) return errorJson(400, "invalid item key");
+    const change: { favourite?: boolean; hidden?: boolean; sessionLength?: SessionLength | null } = {};
+    if (b.favourite !== undefined) {
+      if (typeof b.favourite !== "boolean") return errorJson(400, "favourite must be true or false");
+      change.favourite = b.favourite;
+    }
+    if (b.hidden !== undefined) {
+      if (typeof b.hidden !== "boolean") return errorJson(400, "hidden must be true or false");
+      change.hidden = b.hidden;
+    }
+    if (b.sessionLength !== undefined) {
+      if (b.sessionLength !== null && !["short", "medium", "long"].includes(b.sessionLength as string))
+        return errorJson(400, "sessionLength must be short, medium, long or null");
+      if (!isGameKey(b.key)) return errorJson(400, "session length applies to games only");
+      change.sessionLength = b.sessionLength as SessionLength | null;
+    }
+    const profile = store.activeProfile();
+    const pref = store.setPref(profile.id, b.key, change);
+    return json({ ok: true, profileId: profile.id, pref });
+  });
+
+  router.get("/api/hidden", async () => {
+    const profile = store.activeProfile();
+    const items = (await allItems(profile.id)).filter((i) => i.hidden);
+    return json({ profile, items });
+  });
 
   return {
     deps,

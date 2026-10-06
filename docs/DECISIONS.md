@@ -229,3 +229,11 @@ This is the restorable state the brief asks for in input mitigation 3.
 It is off by default; the on-device checklist says when to turn it on. The input bridge (mitigation 4) is documented in DESIGN.md and not built.
 
 **D-050 — Mock-mode launch log** (2026-10-06, P5). In mock mode the recording runner keeps every command it would have run. `GET /api/mock/launches` returns those commands and the mock Jellyfin server's play commands, so UI tests can assert them. Like the other mock endpoints, it does not exist outside mock mode.
+
+## Phase 6: Profiles and preferences
+
+**D-051 — Preferences belong to the active profile** (2026-10-06, P6). `POST /api/prefs` takes `{key, favourite?, hidden?, sessionLength?}` and writes to the active profile; partial updates keep the other fields. A session-length override applies to game keys only, and `null` clears it so the genre default comes back. Hidden items leave Home, Play, Watch and the picker. `GET /api/hidden` lists them so Settings can offer Unhide (Phase 8). Favourites show a ★ badge on tiles; the badge is a shape, not a colour.
+
+**D-052 — Profile switching UI** (2026-10-06, P6). The Home profile chip opens "Who's on the couch?", with one large card per profile showing its size. A switches the profile, refreshes all data, says "<name> is on the couch", and returns. UI state is saved per profile, so each profile resumes where it left off. Profiles stay the three presets (brief default); creating and renaming profiles needs text entry, which the controller-only rule rules out, so they are not editable in v1.
+
+**D-053 — Focus returns when a modal closes** (2026-10-06, P6). Closing the Y menu removes its focused element. The scope stack now hands DOM focus back to the focused element of the scope underneath on the next frame. An end-to-end test caught this.

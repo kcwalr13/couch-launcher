@@ -201,3 +201,13 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
   - UI: `launch.e2e.ts` takes the mock NAS down, presses Resume, and sees an error message with `data-kind="error"` while focus stays on the Resume button.
 - **Launching state**: `launch.e2e.ts` covers the full sequence. The overlay shows "Steam is starting Portal 2." and the recorded command is `steam://rungameid/620`. A `visibilitychange` to visible clears the overlay and refetches data, and B dismisses it. Resuming Arrival hands off with the right ticks.
 - **Reloading restores screen and focus**: covered for Play (with column memory) and for Detail, after which Back goes to Home.
+
+### Phase 6 — Profiles and preferences
+
+- **Isolated per profile** (`profiles-prefs.test.ts`): a favourite, a hidden item and a session-length override set on Solo are absent on "Two of us" and present again on Solo. Hidden media leaves Watch, and the hidden list can unhide it. Clearing an override restores the genre default. Bad input is rejected with 400.
+- **Persist across a restart**: a second `createApp` over the same SQLite file sees the active profile, each profile's favourites and the saved UI state. Profiles are seeded exactly once.
+- **UI** (`profiles.e2e.ts`, keys only):
+  - A favourite set with Y appears as a ★, disappears after switching to "Two of us", and is back for Solo after a page reload.
+  - Hide from Detail shows a message and removes the game from Play (13 games). Group still sees it.
+  - A session-length override from the Y menu shows on Detail as "Short sessions (set by you)".
+- The Profiles screen is included in the ten-foot audit at 1080p and 4K.

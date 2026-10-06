@@ -70,7 +70,31 @@ export function Detail() {
       if (!item) return;
       if (k === "act:play") nav.launch(item);
       else if (k === "act:start") nav.launch(item, true);
-      else if (k === "act:favourite" || k === "act:hide" || k === "act:session") nav.openOptions(item);
+      else if (k === "act:favourite")
+        api
+          .prefs({ key: item.key, favourite: !item.favourite })
+          .then(() => {
+            nav.message(
+              item.favourite
+                ? "Removed from favourites"
+                : `Added to favourites for ${nav.profile?.name ?? "this profile"}`,
+            );
+            nav.refresh();
+          })
+          .catch((e: Error) => nav.message(e.message, "error"));
+      else if (k === "act:hide")
+        api
+          .prefs({ key: item.key, hidden: !item.hidden })
+          .then(() => {
+            nav.message(
+              item.hidden
+                ? `${item.title} is visible again`
+                : `${item.title} is hidden for ${nav.profile?.name ?? "this profile"}`,
+            );
+            nav.refresh();
+          })
+          .catch((e: Error) => nav.message(e.message, "error"));
+      else if (k === "act:session") nav.openOptions(item);
     },
     onOptions: () => {
       if (item) nav.openOptions(item);
