@@ -18,3 +18,89 @@ Format: **D-number — title** (date, phase). Decision. Why. Source when verifie
 **D-006 — Typecheck per project with `tsc -p`** (2026-10-06, P0). `tsc -b` needs composite projects that emit; the repo never emits with tsc, so `scripts/typecheck.ts` runs `tsc -p --noEmit` per project.
 
 **D-007 — Playwright test naming** (2026-10-06, P0). UI tests are `*.e2e.ts` and run under Node via the Playwright CLI; `bun test` would otherwise collect `*.spec.ts` files.
+
+## Phase 1: Spikes
+
+Research was done against primary sources where the VM's egress proxy allowed it (GitHub source and raw files, Microsoft Learn). bun.com, developer.valvesoftware.com, api.jellyfin.org and store.steampowered.com were blocked from this VM, so those facts come from source code mirrors on GitHub. "Verified" below means checked against a source or by running code here. "Unverified" items are on `docs/ON_DEVICE.md`.
+
+**D-008 — Single executable: Bun works for both targets** (2026-10-06, P1). `bun build --compile --target=bun-linux-x64` and `--target=bun-windows-x64` both succeed from Linux (Bun downloads the target runtime). Sizes: about 82 MB (Linux) and 86 MB (Windows). The web bundle is embedded as base64 in a generated module (`scripts/build.ts` fills `http/embedded-web.ts` during the compile, then restores the empty stub), which avoids Bun's special handling of HTML imports. `bun:sqlite` is part of the runtime and works in the compiled binary.
+*Verified by running*: the Linux binary serves the UI and `/api/status` and creates its SQLite file. The Windows `.exe` is a PE32+ x86-64 image; it was **run under Wine 9.0** in this VM: it reported `platform: "windows"`, created its database under `%LOCALAPPDATA%\couch-launcher\mock`, and served the UI and API. Wine is not Windows, so a run on the real PC stays on the on-device list. No fallback to Node was needed. Source: oven-sh/bun `docs/bundler/executables.mdx`.
+
+**D-009 — Hidden console on Windows** (2026-10-06, P1). The service starts at sign-in and must not leave a console window open. The docs say `--windows-hide-console` is the one Windows flag that works when cross-compiling, and the built PE's subsystem field reads 2 (GUI), which confirms it. `--windows-icon` and version metadata need a Windows build host, so v1 ships without a custom icon. A GUI-subsystem program has no console when started by double-click, so `doctor` also writes its report to `%LOCALAPPDATA%\couch-launcher\doctor.txt`, and `install.ps1` prints that file.
+
+**D-010 — shortcuts.vdf binary format** (2026-10-06, P1). Type bytes are 00 map, 01 string, 02 int32 LE, 03 float32, 07 uint64, 08 end, plus 05/06/0A/0B, which shortcuts.vdf does not use but the parser accepts. The root is `shortcuts` → `"0"`, `"1"`… entries. Key casing varies by writer (`AppName`/`appname`, `Exe`/`exe`), so every lookup is case-insensitive. Fields used: `appid` (signed int32), `AppName`, `Exe`, `StartDir`, `LaunchOptions`, `IsHidden`, `LastPlayTime` (unix seconds), `tags`. Sources: ValvePython/vdf, Corecii/steam-binary-vdf-ts. Covered by a hand-assembled byte fixture test.
+
+**D-011 — Shortcut game id** (2026-10-06, P1). `rungameid = (appid >>> 0) << 32 | 0x02000000`, where `appid` is the signed int32 from shortcuts.vdf. For old files with no `appid`, the 32-bit id is `crc32(Exe + AppName) | 0x80000000`, with Exe taken exactly as stored, quotes included. Grid art uses the unsigned 32-bit id: `<id>p.png` (portrait), `<id>_hero.png`, `<id>_logo.png`, `<id>.png` (wide), or the same names as `.jpg`. Source: SteamGridDB/steam-rom-manager `generate-app-id.ts`. Tests: `gameid.test.ts`. That a real shortcut actually starts this way is on the on-device list.
+
+**D-012 — Jellyfin endpoints and auth** (2026-10-06, P1). Auth header: `Authorization: MediaBrowser Client="Couch Launcher", Device=…, DeviceId=…, Version=…, Token="<key>"`. `X-Emby-Token` and `api_key` are gated by `EnableLegacyAuthorization`, which defaults to true in 10.11 and false on master, so they are not used. Endpoints, all with `userId` as a query parameter:
+- `/UserItems/Resume`
+- `/Shows/NextUp`
+- `/Items/Latest` (returns a bare array)
+- `/Items` (unwatched movies)
+- `/Items/{id}`
+- `/Items/{id}/Images/{Primary|Backdrop}`
+- `/System/Info/Public` (no auth, used as the reachability check)
+- `/Users` (to auto-pick a user)
+
+The `/Users/{id}/Items/...` forms are obsolete in 10.11 and are not used. Source: jellyfin/jellyfin `release-10.11.z` controllers (`ItemsController`, `UserLibraryController`, `SessionController`) and `AuthorizationContext.cs` on master.
+
+**D-013 — Playback handoff** (2026-10-06, P1). The default (`playback.handoff = "client"`) has five steps:
+1. Start Jellyfin Desktop through its own non-Steam shortcut, found in shortcuts.vdf by name containing `playback.client_shortcut` (default "Jellyfin"), using `steam://rungameid/`. This keeps it inside Gaming Mode's focus handling.
+2. If no shortcut matches, run `playback.client_command` or the platform default (Linux: `flatpak run org.jellyfin.JellyfinDesktop`; Windows: `Jellyfin Desktop.exe` under `%LOCALAPPDATA%\Programs` or `%ProgramFiles%`).
+3. Poll `GET /Sessions?controllableByUserId=<user>&activeWithinSeconds=60` every second, up to `playback.session_wait_sec`, for a session whose `Client` contains "Jellyfin Desktop" or "Jellyfin Media Player", supports remote control, and has the newest `LastActivityDate`.
+4. Send `POST /Sessions/{id}/Playing?playCommand=PlayNow&itemIds=<id>&startPositionTicks=<pos*10^7>`.
+5. If no session appears in time, the client stays open and the UI says "Jellyfin Desktop is open, but did not accept the play command; pick the item there". The service does not swap the kiosk to the web client behind the user's back.
+
+`"web"` mode returns `<url>/web/#/details?id=<itemId>` for the kiosk browser to open. That page needs the browser to be signed in to Jellyfin once. The play endpoint returns 204 even when a client ignores the command, so the server's answer cannot confirm acceptance. Jellyfin Desktop is jellyfin-web inside a Qt shell, so it should honour PlayNow over its websocket, but this is **unverified** and on the on-device list. Jellyfin Desktop is the v2.0 rename of Jellyfin Media Player; its Flatpak id is `org.jellyfin.JellyfinDesktop` and its Windows installer uses `PrivilegesRequired=lowest`. Source: jellyfin/jellyfin-desktop releases and `bundle/win/JellyfinDesktop.iss.in`.
+
+**D-014 — Kiosk browser and controller permission on Linux** (2026-10-06, P1).
+- Browser: `flatpak run org.chromium.Chromium --kiosk --noerrdialogs --disable-session-crashed-bubble --disable-infobars --no-first-run --check-for-update-interval=31536000 --autoplay-policy=no-user-gesture-required http://127.0.0.1:7744/`.
+- Gamepad API access inside the Flatpak: `flatpak override --user --device=input org.chromium.Chromium`. `--device=input` exists from Flatpak 1.15.6; the installer falls back to `--device=all` on older Flatpak. Source: Flathub discourse "Support for --device=input".
+- Primary input stays the key-mapped Steam Input layout (brief), because of steam-for-linux#13665. That issue is open: Steam Input recreates its virtual pad on every app launch, and sandboxed apps that are already running keep the dead device (ENODEV) without hotplug.
+
+**D-015 — Steam launch command** (2026-10-06, P1). Linux: `steam steam://rungameid/<id>`, which hands the URL to the running client over IPC. When Steam itself is the Flatpak, use `flatpak run com.valvesoftware.Steam <url>`. Windows: `<SteamRoot>\steam.exe steam://rungameid/<id>`, a direct exec with no shell or `start` quoting; `explorer.exe <url>` is the fallback when no root is known. The service always spawns these itself; the browser never sees a `steam://` link. That the game comes to the front in Gaming Mode / Big Picture is on the on-device list.
+
+**D-016 — Windows kiosk browser** (2026-10-06, P1). Edge's `--kiosk` mode always runs InPrivate (Microsoft Learn, "Configure Microsoft Edge kiosk mode"), which would forget the Jellyfin web login. The launcher therefore uses `msedge.exe --app=<url> --user-data-dir=%LOCALAPPDATA%\couch-launcher\browser --start-fullscreen --no-first-run`: a chromeless full-screen window with its own persistent profile, and no admin rights needed. The Gamepad API works in Edge without extra permission.
+
+**D-017 — Windows start at sign-in** (2026-10-06, P1). `install.ps1` writes a per-user `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` value `CouchLauncher = "<exe>" serve`, which needs no admin. A scheduled task at logon usually needs elevation; a Startup-folder `.lnk` would also work but needs COM to create. Wine's `reg.exe` output was used to confirm the `reg query` parser (`SteamPath    REG_SZ    c:/program files (x86)/steam`, CRLF line ends).
+
+**D-018 — Windows Steam root** (2026-10-06, P1). Lookup order:
+1. `steam.root` from config
+2. `HKCU\Software\Valve\Steam\SteamPath` (stored lower case with forward slashes, normalised with `path.win32.normalize`)
+3. `HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath`
+4. `HKLM\SOFTWARE\Valve\Steam\InstallPath`
+5. `%ProgramFiles(x86)%\Steam`
+
+A root is valid only if `steamapps\libraryfolders.vdf` exists.
+
+**D-019 — Linux Steam root** (2026-10-06, P1). Candidates, in order:
+1. config
+2. `~/.steam/steam`
+3. `~/.steam/root`
+4. `~/.local/share/Steam`
+5. `~/.var/app/com.valvesoftware.Steam/.local/share/Steam`
+6. `~/.var/app/com.valvesoftware.Steam/data/Steam`
+
+Symlinks are resolved and de-duplicated. SteamOS and Bazzite both use the native `~/.local/share/Steam`, reached through the `~/.steam/steam` symlink. Valid only with `steamapps/libraryfolders.vdf`.
+
+**D-020 — Steam local data sources** (2026-10-06, P1).
+- Library folders: `steamapps/libraryfolders.vdf`.
+- Installed games: `appmanifest_<id>.acf` in each library's `steamapps`.
+- Playtime and last played: `userdata/<accountid>/config/localconfig.vdf` → `UserLocalConfigStore/Software/Valve/Steam/apps/<appid>` → `Playtime` (minutes) and `LastPlayed` (unix seconds). The key is `apps` or `Apps` depending on client version. The manifest's `LastPlayed` is only a fallback.
+- User: `config/loginusers.vdf`, taking the `MostRecent` user. Account id = SteamID64 − 76561197960265728.
+- Artwork (`appcache/librarycache`), current layout: `<appid>/library_600x900.jpg`, `<appid>/library_hero.jpg`, `<appid>/header.jpg`, and sometimes `<appid>/<hash>/library_600x900.jpg` or `library_capsule.jpg`.
+- Artwork, old flat layout: `<appid>_library_600x900.jpg`, `<appid>_library_hero.jpg`, `<appid>_header.jpg`.
+- Resolution order: grid override, then per-app folder, then hashed subfolder, then flat file, then `header.jpg` as a last resort for the poster.
+
+Sources: Playnite#1016, Deguffer#63, Vibepollo#555.
+
+**D-021 — Store metadata** (2026-10-06, P1). `https://store.steampowered.com/api/appdetails?appids=<id>&l=english` returns `{ "<id>": { success, data: { type, name, short_description, genres: [{id: "1", description: "Action"}], categories: [{id: 28, description: "Full controller support"}] } } }`. Category ids used:
+- 24 Shared/Split Screen
+- 37 Shared/Split Screen PvP
+- 39 Shared/Split Screen Co-op
+- 28 Full controller support
+- 18 Partial Controller Support
+
+The unofficial limit is about 200 requests per 5 minutes, so requests go out one at a time, 1.5 s apart, back off for 5 minutes on HTTP 429, and the cache refreshes after 30 days. The store host is blocked from this VM, so fixtures follow the documented shape and live fetching is on the on-device list. Source: woctezuma/steam-api `categories.json`.
+
+**D-022 — Wine as a Windows test bed** (2026-10-06, P1). Wine 9.0 was installed in the dev VM (`apt-get install wine64`). It runs the cross-compiled `.exe`, so Windows code paths (`process.platform === "win32"`, `%APPDATA%`/`%LOCALAPPDATA%`, `reg.exe`) are exercised for real by `scripts/wine-smoke.ts`. It is optional, not part of `check`, because a fresh clone has no Wine. A Wine pass is evidence, not proof.

@@ -39,3 +39,19 @@ kiosk browser ──HTTP──> local service ──read-only──> Steam files
 - `bun run check` green: biome, tsc (4 projects), `bun test` (12 tests), vite build, Playwright smoke test.
 - Server starts in mock mode and answers `GET /api/status` (`apps/server/test/status.test.ts`, and the Playwright web server waits on `/api/status`).
 - Config loader: defaults, first-run creation, overrides, warnings, unparseable file, redaction (`config.test.ts`).
+
+### Phase 1 — Spikes
+
+Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests:
+
+| Spike | Code | Evidence |
+| --- | --- | --- |
+| Single executable (Linux + Windows) | `scripts/build.ts` | Both targets compile. The Linux binary served the UI and API and created its database. The Windows `.exe` ran under Wine (`scripts/wine-smoke.ts`: version, `/api/status` reporting `platform: "windows"`, embedded UI). |
+| Binary shortcuts parsing | `adapters/steam/vdf.ts` | `vdf.test.ts`: hand-assembled bytes, round trip, malformed input |
+| Shortcut game id | `adapters/steam/gameid.ts` | `gameid.test.ts`: CRC check value, signed→unsigned, 64-bit id, legacy id |
+| Jellyfin endpoints and auth | `adapters/jellyfin/client.ts` | `jellyfin-client.test.ts`: header, key never in the URL, error classes |
+| Playback handoff | design in D-013 | Implemented in Phase 5 |
+| Kiosk flags, controller permission | `platform/linux.ts`, `platform/windows.ts` | `platform-commands.test.ts` |
+| Windows Steam path | `platform/windows.ts` `findSteamRoot` | `platform-commands.test.ts`. Parser checked against real `reg.exe` output under Wine. |
+| Windows launch command | `platform/windows.ts` | `platform-commands.test.ts` |
+| Windows start at sign-in | D-017 | Implemented in `install.ps1` (Phase 8) |

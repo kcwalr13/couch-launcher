@@ -4,8 +4,17 @@ import type { Command, Platform, PlatformDeps, SteamRootResult } from "./types.t
 
 const W = path.win32;
 
-/** Edge kiosk flags. See docs/DECISIONS.md (Windows kiosk spike). */
-export const EDGE_KIOSK_FLAGS = ["--edge-kiosk-type=fullscreen", "--no-first-run", "--noerrdialogs"];
+/**
+ * Edge app-mode flags. `--kiosk` would force an InPrivate session, which forgets the Jellyfin web
+ * login the "web" handoff relies on, so the launcher uses a full-screen app window with its own
+ * persistent profile instead. See docs/DECISIONS.md D-016.
+ */
+export const EDGE_APP_FLAGS = [
+  "--start-fullscreen",
+  "--no-first-run",
+  "--noerrdialogs",
+  "--disable-features=Translate",
+];
 
 /** Registry values that record where Steam is installed (per user first). */
 export const STEAM_REGISTRY_QUERIES = [
@@ -87,13 +96,29 @@ export function createWindowsPlatform(deps: PlatformDeps): Platform {
     },
 
     jellyfinClientCommand(): Command {
-      return { cmd: W.join(programFiles, "Jellyfin", "Jellyfin Desktop", "Jellyfin Desktop.exe"), args: [] };
+      // The Jellyfin Desktop installer runs with PrivilegesRequired=lowest: per-user installs land in
+      // %LOCALAPPDATA%\Programs, machine-wide ones in %ProgramFiles%.
+      const candidates = [
+        W.join(localAppData, "Programs", "Jellyfin Desktop", "Jellyfin Desktop.exe"),
+        W.join(programFiles, "Jellyfin Desktop", "Jellyfin Desktop.exe"),
+        W.join(programFiles, "Jellyfin", "Jellyfin Media Player", "JellyfinMediaPlayer.exe"),
+      ];
+      const found = candidates.find((c) => fs.exists(c)) ?? candidates[0];
+      return { cmd: found as string, args: [] };
     },
 
     kioskCommand(url: string): Command {
+      const edge = [
+        W.join(programFilesX86, "Microsoft", "Edge", "Application", "msedge.exe"),
+        W.join(programFiles, "Microsoft", "Edge", "Application", "msedge.exe"),
+      ];
       return {
-        cmd: W.join(programFilesX86, "Microsoft", "Edge", "Application", "msedge.exe"),
-        args: ["--kiosk", url, ...EDGE_KIOSK_FLAGS],
+        cmd: edge.find((c) => fs.exists(c)) ?? (edge[0] as string),
+        args: [
+          `--app=${url}`,
+          `--user-data-dir=${W.join(localAppData, "couch-launcher", "browser")}`,
+          ...EDGE_APP_FLAGS,
+        ],
       };
     },
 

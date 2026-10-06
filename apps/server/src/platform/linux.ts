@@ -91,7 +91,7 @@ export function createLinuxPlatform(deps: PlatformDeps): Platform {
     },
 
     kioskCommand(url: string): Command {
-      return { cmd: "flatpak", args: ["run", CHROMIUM_FLATPAK_ID, ...CHROMIUM_KIOSK_FLAGS, `--app=${url}`] };
+      return { cmd: "flatpak", args: ["run", CHROMIUM_FLATPAK_ID, ...CHROMIUM_KIOSK_FLAGS, url] };
     },
 
     parseCommandLine: splitCommandLine,
