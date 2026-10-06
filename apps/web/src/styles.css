@@ -1,1 +1,133 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter/wght.css";
+
+/*
+ * Couch Launcher visual identity: "Lamplight".
+ * A slate-dark room lit by one warm amber accent. Artwork carries the colour; the interface
+ * recedes. All text meets 7:1 contrast against the darkest surface it can sit on.
+ */
+@theme {
+  --color-ink: #0b0d12; /* page background */
+  --color-slate: #151a23; /* surfaces, tile fallback */
+  --color-slate-2: #1e2531; /* raised surface */
+  --color-text: #f3f0e8; /* 17.1:1 on ink */
+  --color-muted: #b9bfcb; /* 10.5:1 on ink, 9.5:1 on slate, 8.3:1 on slate-2 */
+  --color-lamp: #f5b544; /* the accent: focus ring, primary action; 10.7:1 on ink */
+  --color-lamp-ink: #1a1204; /* text on lamp: 10.2:1 */
+  --color-danger: #ffb4a8; /* 11.4:1 on ink */
+  --font-sans: "Inter Variable", "Inter", "Noto Sans", "Segoe UI", system-ui, sans-serif;
+}
+
+:root {
+  --ui-scale: 1;
+  color-scheme: dark;
+}
+
+/* The whole UI is laid out in rem and scales with the viewport: 1rem = 16px at 1920x1080,
+   32px at 3840x2160, times the user's UI scale. */
+html {
+  font-size: calc(min(100vw / 120, 100vh / 67.5) * var(--ui-scale));
+  background: var(--color-ink);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-ink);
+  font-size: 1.75rem; /* 28px at 1080p */
+  line-height: 1.3;
+  cursor: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+[data-focus-key] {
+  outline: none;
+}
+
+/* The 5% safe area every screen lives inside. */
+.safe {
+  position: absolute;
+  inset: 5vh 5vw;
+}
+
+.tile {
+  transition:
+    transform 90ms ease-out,
+    box-shadow 90ms ease-out;
+}
+.tile[data-focused="true"] {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 0.25rem var(--color-ink),
+    0 0 0 0.6rem var(--color-lamp),
+    0 1.5rem 3rem rgb(0 0 0 / 0.6);
+  z-index: 2;
+}
+
+.chip[data-focused="true"],
+.btn[data-focused="true"] {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 0.2rem var(--color-ink),
+    0 0 0 0.5rem var(--color-lamp);
+}
+
+.skeleton {
+  background: linear-gradient(
+    100deg,
+    var(--color-slate) 40%,
+    var(--color-slate-2) 50%,
+    var(--color-slate) 60%
+  );
+  background-size: 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* Rows scroll programmatically and clip exactly at the safe area. Content is inset by 1.5rem
+   (the .inset class) so the focused tile's scale and ring fit inside the clip. */
+.row-scroll {
+  display: flex;
+  gap: 2rem;
+  overflow: hidden;
+  padding: 1.25rem 1.5rem;
+  margin: -1.25rem 0;
+}
+.inset {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile,
+  .chip,
+  .btn {
+    transition: none;
+  }
+  .skeleton {
+    animation: none;
+  }
+}

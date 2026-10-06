@@ -3,7 +3,7 @@ import type { StatusResponse, WatchResponse } from "@couch/core";
 import { mapItem } from "../src/adapters/jellyfin/jellyfin.ts";
 import { makeTestApp, type TestApp } from "./helpers.ts";
 
-let t: TestApp & { jf: import("../src/mock/jellyfin.ts").MockJellyfin };
+let t: TestApp;
 afterEach(() => t.cleanup());
 
 const watch = async () => (await (await t.get("/api/watch")).json()) as WatchResponse;

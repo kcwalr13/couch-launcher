@@ -55,6 +55,27 @@ kiosk browser ──HTTP──> local service ──read-only──> Steam files
 
 `GET /api/watch` applies the active profile's hidden items.
 
+### Web UI
+
+`apps/web/src`:
+- `App.tsx`: the navigation stack (tabs Home, Play and Watch are roots that remember their focus; Detail, Tonight, Profiles and Settings are pushed on top), global actions, the backdrop, the Y options overlay, the Launching overlay, and on-screen messages.
+- `focus/`: the pure engine, the React scopes, and deterministic scrolling.
+- `input/`: action bindings, the repeater, and `InputController` (keyboard plus Gamepad API polling).
+- `screens/`: one component per screen; each declares its focus rows.
+- `useApi.ts`: stale-while-revalidate fetches. A `refreshToken` refetches everything when the page becomes visible again after a launch.
+
+The visual identity ("Lamplight") is described in DECISIONS D-041. Screenshots are in `docs/screenshots/`.
+
+Screen layouts:
+
+| Screen | Focus rows |
+| --- | --- |
+| Home | [Tonight, Play, Watch, profile chip] / Continue tiles |
+| Play | [sort ×3, co-op filter, controller filter] / grid rows of 6 |
+| Watch | ([Try again, Settings] when Jellyfin has a problem) / Continue Watching / Next Up / Movies / Shows |
+| Detail | [Play or Resume, Play from start, Favourite, Hide, Session length] |
+| Options (Y) | Favourite / Hide / session length chips / Close |
+
 ### Fixtures and mock mode
 
 `scripts/make-fixtures.ts` generates everything under `fixtures/` relative to `FIXTURE_NOW = 2026-10-03T19:00Z`:
@@ -113,3 +134,30 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
   - With no cache, status is `unreachable` and every row is empty. The UI's empty state is covered in Phase 4.
 - **Bad API key**: status is `degraded`, "Jellyfin rejected the API key". The key does not appear in responses or logs.
 - **Images**: movie poster, series backdrop for episodes, and `null` when no image exists (Shōgun).
+
+### Phase 4 — UI shell and focus
+
+- **Every screen and tile reachable by keys alone** (`navigation.e2e.ts`):
+  - A walk of every row and column reaches every focusable on Home, Play (14 games and 5 chips) and Watch (15 tiles).
+  - Each screen is reached by keys: Home, Play, Watch, Detail, Tonight, Settings and Profiles. Tonight, Settings and Profiles are placeholders until their phases.
+- **A focused element exists after every input**: the `press()` helper asserts that `document.activeElement` is the `data-focused` element after every key press in every test.
+- **Focus behaviour**:
+  - Back restores the previous focus.
+  - LB and RB remember each section's focus.
+  - Up and down keep the column; rows do not wrap.
+  - Holding a direction repeats after 400 ms at about 8 per second.
+  - Input to visible focus change measures under 100 ms (MutationObserver from keydown).
+  - Missing art shows the text fallback.
+  - Watch shows its empty state, with Try again focused, when Jellyfin is down with no cache, and saved items when a cache exists.
+- **Gamepad path** (`gamepad.e2e.ts`): a `navigator.getGamepads` shim drives the polling path. The D-pad, A, B, LB, RB, X, Start and the left stick work, held D-pad repeats, and the guide button is ignored.
+- **Ten-foot rules** (`tenfoot.e2e.ts` + `tenfoot.ts`): 8 screen states × {1920×1080, 3840×2160}. Each audit asserts:
+  - every visible text is at least 28 px at 1080p (56 px at 4K)
+  - text contrast is at least 7:1, measured against the composited background
+  - text and focusables stay inside the 5% safe area
+  - the focused element is scaled and ringed
+  - there is no scrollable overflow and no `:hover` rule
+  - the pointer is hidden and the theme is dark
+
+  Screenshots are written to `apps/web/test-results/screens/` on every run. A reviewed set is in `docs/screenshots/`. The audit caught tiles peeking past the right safe line, fixed by D-042.
+- **Unit tests**: focus engine (wrap, column memory, empty rows, focus-never-lost property over every key, direction and column), repeat timing with fake timers, and core formatting.
+- **API tests** (`home-items-art.test.ts`): Continue order, hidden items, item detail with 400/404, and the art proxy (local, grid, 404 fallback, Jellyfin proxied and disk-cached, served from cache while the NAS is down, API key never exposed).

@@ -4,6 +4,7 @@
  * refreshes in the background; Jellyfin rows come from the Jellyfin source (with its own cache).
  */
 import type { GameSort, SourceStatus, UnifiedItem } from "@couch/core";
+import { timeOf } from "@couch/core";
 import { isUtilityShortcut, shortcutItem, steamGameItem } from "../adapters/steam/items.ts";
 import { type SteamScan, scanSteam } from "../adapters/steam/steam.ts";
 import type { StoreMetadata } from "../adapters/steam/store-metadata.ts";
@@ -127,5 +128,5 @@ export function sortGames(items: UnifiedItem[], sort: GameSort): UnifiedItem[] {
   if (sort === "az") return copy.sort(byTitle);
   if (sort === "playtime")
     return copy.sort((a, b) => (b.playtimeMin ?? -1) - (a.playtimeMin ?? -1) || byTitle(a, b));
-  return copy.sort((a, b) => (b.lastActivityAt ?? "").localeCompare(a.lastActivityAt ?? "") || byTitle(a, b));
+  return copy.sort((a, b) => timeOf(b.lastActivityAt) - timeOf(a.lastActivityAt) || byTitle(a, b));
 }

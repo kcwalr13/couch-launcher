@@ -126,6 +126,8 @@ export function testPlatform(id: PlatformId, deps: Partial<PlatformDeps> = {}) {
 export interface TestApp {
   app: App;
   deps: AppDeps;
+  proc: RecordingProc;
+  jf: MockJellyfin;
   cleanup: () => void;
   get: (p: string) => Promise<Response>;
   send: (method: string, p: string, body?: unknown) => Promise<Response>;
@@ -146,7 +148,7 @@ export function fixtureDeps(id: PlatformId = "linux") {
 
 export function makeTestApp(
   over: Partial<AppDeps> & { configure?: (c: Config) => void; platformId?: PlatformId } = {},
-): TestApp & { proc: RecordingProc; jf: MockJellyfin } {
+): TestApp {
   const t = tempDir();
   const config = defaultConfig();
   config.jellyfin.url = MOCK_JELLYFIN_URL;
@@ -164,7 +166,7 @@ export function makeTestApp(
     log: createLogger({ quiet: true, capture: true }),
     mock: true,
     dataDir: t.dir,
-    net: { store: mockStoreFetch(FIXTURES), jellyfin: jf.fetch },
+    net: { store: mockStoreFetch(FIXTURES), jellyfin: jf.fetch, art: null },
     ...over,
   };
   const app = createApp(deps);

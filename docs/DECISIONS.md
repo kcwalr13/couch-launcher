@@ -163,3 +163,45 @@ The picker additionally uses `/Items?includeItemTypes=Movie&isPlayed=false&recur
 **D-035 — Episode art** (2026-10-06, P3). Episodes use the series poster (`SeriesId` + `SeriesPrimaryImageTag`) and the series backdrop (`ParentBackdropItemId`), because episode stills are 16:9 thumbnails that look wrong in poster tiles. A 404 from the image endpoint counts as "no art", and the UI shows the text fallback.
 
 **D-036 — The mock Jellyfin server checks auth** (2026-10-06, P3). `mock/jellyfin.ts` rejects requests that lack the `MediaBrowser … Token="…"` header, records remote-control calls, and can simulate an outage (`down`) or a client that is slow to start (`sessionsDelay`).
+
+## Phase 4: UI shell and focus
+
+**D-037 — Own focus engine** (2026-10-06, P4). Focus behaviour is the product, so the launcher uses a ~80-line pure engine (`apps/web/src/focus/engine.ts`) instead of a TV navigation library. A screen declares rows of keys. Left and right stay within the row and never wrap. Up and down skip empty rows and land on the remembered column, clamped to the row's length. `resolve` turns a stale key into the screen default, then into the first key. React scopes (`scope.tsx`) stack: a modal sits on top of its screen and gets every action first.
+
+**D-038 — Our own key repeat** (2026-10-06, P4). Browser key-repeat events (`event.repeat`) are ignored. One `Repeater` drives held directions from both keyboard and gamepad: the first step fires on press, repeats start after 400 ms, then come every 125 ms (8 per second). Hold timing is therefore the same whatever the OS key-repeat settings or Steam Input emulation.
+
+**D-039 — Key map** (2026-10-06, P4).
+
+| Action | Keys |
+| --- | --- |
+| Move | Arrows |
+| A | Enter or Space |
+| B | Escape or Backspace |
+| X | `x` |
+| Y | `y` |
+| LB | `q` or PageUp |
+| RB | `e` or PageDown |
+| Start | `s` |
+
+The Gamepad API uses the W3C standard mapping (0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 9 Start, 12–15 D-pad, left stick with a 0.5 threshold). Button 16 (guide) is never bound. When the same action arrives from both the keyboard and the gamepad within 80 ms, the gamepad copy is dropped, because a pad can be seen both ways.
+
+**D-040 — Scaling** (2026-10-06, P4). `html { font-size: min(100vw/120, 100vh/67.5) × ui-scale }`, and everything is sized in rem. 1 rem is 16 px at 1920×1080 and 32 px at 3840×2160, so both layouts are identical. Body text is 1.75 rem (28 px at 1080p), and every text on screen is at least that size.
+
+**D-041 — Visual identity "Lamplight"** (2026-10-06, P4).
+- Slate-black surfaces (`#0b0d12`, `#151a23`, `#1e2531`) and warm off-white text (`#f3f0e8`).
+- Muted text `#b9bfcb`, 8.3:1 even on the lightest surface.
+- One amber accent, `#f5b544`, for the focus ring and primary actions.
+- Inter Variable is bundled, so the look is the same on SteamOS and Windows with no internet.
+- The focused item's hero art sits blurred behind the screen at 30% opacity under an ink gradient. Worst case, a white backdrop pixel, still leaves muted text at about 7.9:1.
+- Focus is shown three ways: scale 1.08, a 0.6 rem amber ring with an ink gap, and a bold caption. Colour is never the only cue.
+
+**D-042 — Rows clip at the safe area** (2026-10-06, P4). Horizontal rows and the Play grid clip exactly at the 5% safe line, and their content is inset 1.5 rem so the focused tile's scale and ring fit inside the clip. Scrolling is programmatic (`focus/scroll.ts`), with no scroll bars. Watch rows snap the focused row to the top.
+
+**D-043 — Mock-only test endpoints** (2026-10-06, P4). `POST /api/mock/reset` and `POST /api/mock/jellyfin` (`{down, sessionsDelay}`) are registered only when `COUCH_MOCK=1`. They let UI tests start each run from a clean slate and simulate a NAS outage.
+
+**D-044 — Something is always focusable** (2026-10-06, P4). Every screen state has a focusable element:
+- Watch with Jellyfin down shows "Try again" and "Settings".
+- Placeholder screens show "Back".
+- Play's sort and filter chips stay present when filters match nothing.
+
+While a screen's data loads (milliseconds with local fixtures), focus is not stored. The screen default is applied once data arrives, and a returning screen shows cached data at once, so focus restores onto real tiles.

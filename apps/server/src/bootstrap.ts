@@ -73,6 +73,7 @@ export async function bootstrap(
   let proc: ProcessRunner = realProcessRunner;
   let storeFetch = globalThis.fetch as unknown as AppDeps["net"]["store"];
   let jellyfinFetch = globalThis.fetch as unknown as AppDeps["net"]["jellyfin"];
+  let mockControls: AppDeps["mockControls"];
   if (mock) {
     const fx = fixturesDir(env);
     const id = hostPlatformId();
@@ -85,7 +86,9 @@ export async function bootstrap(
       proc,
     });
     storeFetch = mockStoreFetch(fx);
-    jellyfinFetch = mockJellyfin(fx).fetch;
+    const jf = mockJellyfin(fx);
+    jellyfinFetch = jf.fetch;
+    mockControls = { jellyfin: jf };
     if (!config.jellyfin.url) {
       config.jellyfin.url = MOCK_JELLYFIN_URL;
       config.jellyfin.api_key = MOCK_JELLYFIN_KEY;
@@ -101,7 +104,12 @@ export async function bootstrap(
     log,
     mock,
     dataDir,
-    net: { store: storeFetch, jellyfin: jellyfinFetch },
+    mockControls,
+    net: {
+      store: storeFetch,
+      jellyfin: jellyfinFetch,
+      art: mock ? null : (globalThis.fetch as unknown as AppDeps["net"]["store"]),
+    },
   });
   return { app, config, platform, store, log, port: config.server.port, host: config.server.host, mock };
 }
