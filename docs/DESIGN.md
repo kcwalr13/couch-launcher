@@ -263,3 +263,21 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
   - Play on Detail, and Play from start (position 0), are covered.
   - B dismisses the Launching state with focus kept.
 - **Play meta line** (D-067). `navigation.e2e.ts` checks "Hades · Last played on Thursday · 36 h played". The ten-foot audit caught the first layout attempt overflowing the safe area; the flex-column layout fixed it.
+
+### Evidence: a fresh clone builds one executable per platform
+
+This was run on 2026-10-06 against commit `63c705c`. The commits after it only change UI, test and doc files; none of them touch the build.
+
+```
+git clone --branch ccr-3390cf52-8btzt2 <origin> fresh && cd fresh
+bun install && bun run build
+  built out/linux/couch-launcher-linux-x64 (82.1 MB)
+  bundled out/linux: ON_DEVICE.md, README.md, couch-launcher.service, steam-input, couch-launcher-linux-x64, install.sh
+  built out/windows/couch-launcher-windows-x64.exe (86.8 MB)
+  bundled out/windows: install.ps1, ON_DEVICE.md, README.md, couch-launcher-windows-x64.exe
+file out/linux/couch-launcher-linux-x64      -> ELF 64-bit LSB executable, x86-64
+file out/windows/couch-launcher-windows-x64.exe -> PE32+ executable (GUI) x86-64, for MS Windows
+COUCH_MOCK=1 ./out/linux/couch-launcher-linux-x64 doctor -> Steam OK, Jellyfin OK, "No problems found."
+```
+
+The final `bun run check` passed twice in a row: 56 Playwright tests and every bun test.
