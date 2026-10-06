@@ -167,6 +167,7 @@ export function makeTestApp(
     mock: true,
     dataDir: t.dir,
     net: { store: mockStoreFetch(FIXTURES), jellyfin: jf.fetch, art: null },
+    sleep: async () => {},
     ...over,
   };
   const app = createApp(deps);

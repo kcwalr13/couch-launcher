@@ -1,4 +1,4 @@
-import type { Profile, UnifiedItem } from "@couch/core";
+import type { Profile, UiState, UnifiedItem } from "@couch/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api.ts";
 import { Backdrop, Header, HintBar } from "./components/Chrome.tsx";
@@ -28,8 +28,20 @@ const entry = (
   id: nextEntryId++,
   screen,
   params,
-  focus: { key: focusKey, col: 0 },
+  focus: { key: focusKey, col: focusKey ? -1 : 0 },
 });
+
+const SCREENS: ScreenName[] = ["home", "play", "watch", "detail", "tonight", "profiles", "settings"];
+
+/** Rebuild the navigation stack from the state saved by the service (screen, focus, params). */
+export function stackFromUiState(s: UiState | null): Entry[] {
+  if (!s || !SCREENS.includes(s.screen as ScreenName)) return [entry("home")];
+  const screen = s.screen as ScreenName;
+  const top = entry(screen, s.params ?? {}, s.focusedKey);
+  if (ROOT_TABS.includes(screen)) return [top];
+  if (screen === "detail" && !s.params?.key) return [entry("home")];
+  return [entry("home"), top];
+}
 
 const TITLES: Partial<Record<ScreenName, string>> = {
   tonight: "Tonight",
@@ -53,6 +65,18 @@ export function App({ initial }: AppProps) {
   const [launching, setLaunching] = useState<LaunchState | null>(null);
   const [now, setNow] = useState(() => new Date());
   const top = stack[stack.length - 1] as Entry;
+
+  // Save the screen and focus to the service (debounced) so a reload or a browser restart
+  // after a game comes back to the same place.
+  const saveKey = JSON.stringify([top.screen, top.params, top.focus.key]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: saveKey captures what matters
+  useEffect(() => {
+    if (top.focus.key === null) return;
+    const t = setTimeout(() => {
+      api.putUiState({ screen: top.screen, focusedKey: top.focus.key, params: top.params }).catch(() => {});
+    }, 250);
+    return () => clearTimeout(t);
+  }, [saveKey]);
 
   // Clock and serverside "now" (mock mode pins the server clock; the UI follows it).
   useEffect(() => {

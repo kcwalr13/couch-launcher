@@ -40,7 +40,8 @@ export function firstKey(rows: FocusRow[]): string | null {
  */
 export function resolve(rows: FocusRow[], state: FocusState, fallback: string | null = null): FocusState {
   const at = locate(rows, state.key);
-  if (at) return state;
+  // A negative column means "not known yet" (restored state): take the key's own column.
+  if (at) return state.col < 0 ? { key: state.key, col: at.col } : state;
   const fb = locate(rows, fallback);
   if (fb) return { key: fallback, col: fb.col };
   const first = firstKey(rows);

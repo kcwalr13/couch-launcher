@@ -205,3 +205,27 @@ The Gamepad API uses the W3C standard mapping (0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 9
 - Play's sort and filter chips stay present when filters match nothing.
 
 While a screen's data loads (milliseconds with local fixtures), focus is not stored. The screen default is applied once data arrives, and a returning screen shows cached data at once, so focus restores onto real tiles.
+
+## Phase 5: Launching
+
+**D-045 — Jellyfin Desktop is always started through Steam** (2026-10-06, P5). Before every client handoff the service starts Jellyfin Desktop through its shortcut, even if a session already exists, because in Gaming Mode only an app started through Steam comes to the front. It then polls `/Sessions` once a second for up to `playback.session_wait_sec` (default 30). Whether a second start of a running Jellyfin Desktop focuses the existing window, rather than opening another, is on the on-device list. A reachability check (`GET /Sessions`) runs first, so "Can't reach Jellyfin" is reported before anything is started.
+
+**D-046 — Launch request lifetime and errors** (2026-10-06, P5). `POST /api/launch/:key` waits for the whole handoff, which takes up to the session wait, and returns `{ok, message}`. Failures use HTTP 502 and a plain-language message that the UI shows as an on-screen message. Spawn failures, missing Steam, an unreachable Jellyfin and a client that never answers are all reported this way. `?from=start` sends position 0.
+
+**D-047 — Launching state** (2026-10-06, P5). After a successful launch the UI shows a full-screen "Starting… / Started" card with the message. The card clears on `visibilitychange` to visible, which is what happens when the game or player quits and the launcher returns; the same event refetches every screen's data. B also dismisses it. While it is shown, no other input acts.
+
+**D-048 — UI state save and restore** (2026-10-06, P5). The top of the navigation stack (screen, params such as sort, filters or the item key, and the focused key) is `PUT` to `/api/ui-state` 250 ms after it settles, per active profile. On load, the UI fetches it, waiting at most 1.5 s, and rebuilds the stack:
+- A tab is restored as the root.
+- Detail, Tonight, Profiles and Settings are restored on top of Home.
+- The column is re-derived from the restored key, so up and down still remember it.
+
+This is the restorable state the brief asks for in input mitigation 3.
+
+**D-049 — Kiosk restart mitigation (Linux, opt-in)** (2026-10-06, P5). With `kiosk.restart_after_game = true`:
+- After a game launch, the service checks `/proc/*/cmdline` every 5 s for Steam's `reaper … AppId=<id>`.
+- Once the game has been seen and then disappears, the service runs `kiosk.restart_command`, or the default `flatpak run org.chromium.Chromium --kiosk … <url>`.
+- It gives up after 5 minutes if the game never appears.
+
+It is off by default; the on-device checklist says when to turn it on. The input bridge (mitigation 4) is documented in DESIGN.md and not built.
+
+**D-050 — Mock-mode launch log** (2026-10-06, P5). In mock mode the recording runner keeps every command it would have run. `GET /api/mock/launches` returns those commands and the mock Jellyfin server's play commands, so UI tests can assert them. Like the other mock endpoints, it does not exist outside mock mode.

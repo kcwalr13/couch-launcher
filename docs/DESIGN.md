@@ -76,6 +76,31 @@ Screen layouts:
 | Detail | [Play or Resume, Play from start, Favourite, Hide, Session length] |
 | Options (Y) | Favourite / Hide / session length chips / Close |
 
+### Launching and playback
+
+`services/launcher.ts` (`Launcher`):
+- **Games and shortcuts:** `platform.steamLaunchCommand(steamRoot, appId | 64-bit gameId)`, spawned detached through the injected `ProcessRunner`.
+- **Media, `handoff = "client"`:**
+  1. Check Jellyfin is reachable.
+  2. Start Jellyfin Desktop, choosing in this order: its non-Steam shortcut (via `steam://rungameid/`), `playback.client_command`, or the platform default.
+  3. Poll `/Sessions` for a remote-controllable Jellyfin Desktop or Media Player session.
+  4. `POST /Sessions/{id}/Playing?playCommand=PlayNow&itemIds=…&startPositionTicks=…`.
+- **Media, `handoff = "web"`:** return the item's `…/web/#/details?id=…` URL for the kiosk browser to open.
+- **Linux, optional:** watch for the game to exit and restart the kiosk browser (D-049).
+
+### Input-loss mitigations (brief, "Input: a known platform risk")
+
+1. **Key-mapped Steam Input layout.** Keyboard is the primary input path. The layout ships in `steam-input/` (Phase 8).
+2. **Gamepad API.** Polled every animation frame; built.
+3. **Restorable UI state.** Built (D-048). The opt-in kiosk restart after a game exits is also built (D-049).
+4. **Input bridge.** Not built. The design, if it is ever needed:
+   - The unsandboxed service reads the controller from `/dev/input/event*` via evdev, or SDL through a small helper.
+   - It maps the controller to the same actions as the keyboard.
+   - It pushes the actions to the UI over a WebSocket on `/api/input`.
+   - The UI feeds them into `InputController` exactly like key events.
+
+   No UI changes would be needed beyond subscribing to the socket.
+
 ### Fixtures and mock mode
 
 `scripts/make-fixtures.ts` generates everything under `fixtures/` relative to `FIXTURE_NOW = 2026-10-03T19:00Z`:
@@ -161,3 +186,18 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
   Screenshots are written to `apps/web/test-results/screens/` on every run. A reviewed set is in `docs/screenshots/`. The audit caught tiles peeking past the right safe line, fixed by D-042.
 - **Unit tests**: focus engine (wrap, column memory, empty rows, focus-never-lost property over every key, direction and column), repeat timing with fake timers, and core formatting.
 - **API tests** (`home-items-art.test.ts`): Continue order, hidden items, item detail with 400/404, and the art proxy (local, grid, 404 fallback, Jellyfin proxied and disk-cached, served from cache while the NAS is down, API key never exposed).
+
+### Phase 5 — Launching
+
+- **Exact commands for Linux and Windows, through an injected spawner** (`launch.test.ts`):
+  - Linux: `steam steam://rungameid/620`, and `steam steam://rungameid/10996831713501380608` for a shortcut.
+  - Windows: `C:\Program Files (x86)\Steam\steam.exe steam://rungameid/…` for both.
+  - Jellyfin Desktop is started through its shortcut (`steam://rungameid/14151776773448138752`), or through `%LOCALAPPDATA%\Programs\Jellyfin Desktop\Jellyfin Desktop.exe` when no shortcut matches, or through a configured command.
+  - PlayNow carries `startPositionTicks = 4440 × 10^7` (resume) or 0 (from start).
+  - The web handoff returns the details URL and starts nothing.
+  - The kiosk restart runs after the game exits.
+- **Errors appear as on-screen messages**:
+  - API: a spawn failure (502 with the message), Jellyfin unreachable, a client that never answers, unknown or malformed keys.
+  - UI: `launch.e2e.ts` takes the mock NAS down, presses Resume, and sees an error message with `data-kind="error"` while focus stays on the Resume button.
+- **Launching state**: `launch.e2e.ts` covers the full sequence. The overlay shows "Steam is starting Portal 2." and the recorded command is `steam://rungameid/620`. A `visibilitychange` to visible clears the overlay and refetches data, and B dismisses it. Resuming Arrival hands off with the right ticks.
+- **Reloading restores screen and focus**: covered for Play (with column memory) and for Detail, after which Back goes to Home.

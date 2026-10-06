@@ -48,6 +48,10 @@ describe("focus engine", () => {
         for (let col = 0; col < 6; col++) expect(all).toContain(move(rows, { key: k, col }, d).key as string);
   });
 
+  test("an unknown column (-1) is taken from the key's position", () => {
+    expect(resolve(rows, { key: "g", col: -1 })).toEqual({ key: "g", col: 3 });
+  });
+
   test("grid rows", () => {
     expect(gridRows("g", ["1", "2", "3", "4", "5"], 2).map((r) => r.keys)).toEqual([
       ["1", "2"],

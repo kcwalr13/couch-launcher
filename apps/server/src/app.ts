@@ -25,6 +25,7 @@ import { defaultWebAssets, serveStatic, type WebAssets } from "./http/static.ts"
 import type { Logger } from "./log.ts";
 import type { Platform, ProcessRunner, ReadFs } from "./platform/types.ts";
 import { ArtService } from "./services/art.ts";
+import { Launcher } from "./services/launcher.ts";
 import { applyPrefs, Library, sortGames } from "./services/library.ts";
 import { VERSION } from "./version.ts";
 
@@ -51,6 +52,8 @@ export interface AppDeps {
     art: FetchFn | null;
   };
   web?: WebAssets;
+  /** Injectable sleep (tests make waiting instant). */
+  sleep?: (ms: number) => Promise<void>;
   /** Mock mode only: handles for simulating outages from UI tests. */
   mockControls?: { jellyfin?: { down: boolean; sessionsDelay: number } };
 }
@@ -61,6 +64,7 @@ export interface App {
   library: Library;
   metadata: StoreMetadata;
   jellyfin: JellyfinSource | null;
+  launcher: Launcher;
 }
 
 const SORTS: GameSort[] = ["recent", "az", "playtime"];
@@ -108,6 +112,16 @@ export function createApp(deps: AppDeps): App {
     cdnFetch: deps.net.art,
     cacheDir: path.join(deps.dataDir, "art"),
     log,
+  });
+
+  const launcher = new Launcher({
+    config,
+    platform,
+    proc: deps.proc,
+    library,
+    jellyfin,
+    log,
+    sleep: deps.sleep,
   });
 
   /** Every item (games and media) with the profile's prefs applied. Hidden items included. */
@@ -233,6 +247,33 @@ export function createApp(deps: AppDeps): App {
     return json(body);
   });
 
+  router.post("/api/launch/:key", async (_req, params, url) => {
+    if (!parseKey(params.key as string)) return errorJson(400, "invalid item key");
+    const profile = store.activeProfile();
+    const item = (await allItems(profile.id)).find((i) => i.key === params.key);
+    if (!item) return errorJson(404, "item not found");
+    const res = await launcher.launch(item, url.searchParams.get("from") === "start");
+    return json(res, res.ok ? 200 : 502);
+  });
+
+  router.get("/api/ui-state", () => json({ state: store.getUiState(store.activeProfile().id) }));
+
+  router.put("/api/ui-state", async (req) => {
+    const b = (await readJson(req)) as Record<string, unknown> | undefined;
+    const screens = ["home", "play", "watch", "detail", "tonight", "profiles", "settings"];
+    if (!b || typeof b.screen !== "string" || !screens.includes(b.screen))
+      return errorJson(400, "invalid screen");
+    const focusedKey = typeof b.focusedKey === "string" && b.focusedKey.length <= 200 ? b.focusedKey : null;
+    let params: Record<string, string> | undefined;
+    if (b.params && typeof b.params === "object") {
+      params = {};
+      for (const [k, v] of Object.entries(b.params as Record<string, unknown>).slice(0, 10))
+        if (typeof v === "string" && k.length <= 40 && v.length <= 200) params[k] = v;
+    }
+    store.putUiState(store.activeProfile().id, { screen: b.screen, focusedKey, params }, nowIso());
+    return json({ ok: true });
+  });
+
   router.get("/api/art/:key/:kind", async (_req, params) => {
     const kind = params.kind;
     if (kind !== "poster" && kind !== "hero") return errorJson(400, "kind must be poster or hero");
@@ -254,11 +295,20 @@ export function createApp(deps: AppDeps): App {
       await jellyfin?.getRows(true);
       return json({ down: jf.down, sessionsDelay: jf.sessionsDelay });
     });
+    // Mock mode only: the commands launches would have run.
+    router.get("/api/mock/launches", () => {
+      const spawned = (deps.proc as { spawned?: unknown[] }).spawned ?? [];
+      return json({ spawned, plays: (jf as { plays?: unknown[] }).plays ?? [] });
+    });
     // Mock mode only: back to a clean slate between UI tests.
     router.post("/api/mock/reset", async (req) => {
       const body = (await readJson(req)) as { clearCache?: boolean; down?: boolean } | undefined;
       jf.down = body?.down ?? false;
       jf.sessionsDelay = 0;
+      const spawned = (deps.proc as { spawned?: unknown[] }).spawned;
+      if (spawned) spawned.length = 0;
+      const plays = (jf as { plays?: unknown[] }).plays;
+      if (plays) plays.length = 0;
       store.db.exec(
         "DELETE FROM item_pref; DELETE FROM suggestion_event; DELETE FROM ui_state; DELETE FROM app_setting WHERE key <> 'device.id';",
       );
@@ -275,6 +325,7 @@ export function createApp(deps: AppDeps): App {
     deps,
     library,
     jellyfin,
+    launcher,
     metadata,
     async fetch(req: Request): Promise<Response> {
       const url = new URL(req.url);
