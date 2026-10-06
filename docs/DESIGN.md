@@ -101,6 +101,10 @@ Screen layouts:
 
    No UI changes would be needed beyond subscribing to the socket.
 
+### Tonight picker
+
+`packages/core/src/picker.ts` is pure. `pickTonight(candidates, context)` takes the profile-applied items and a context (time, mode, profile, weights, skips map, exclusions, page, now, UTC offset). It applies the hard filters (`excludedBecause`), scores the signals (`signalsFor`), ranks with a key tie-break, and builds the cards with reasons (`reasonFor`) and the seeded wildcard. The service (`POST /api/tonight`) adds history and answer persistence; the UI (`screens/Tonight.tsx`) is three one-press questions and then three cards plus "Show three more" and "Start over". See D-054 to D-057.
+
 ### Fixtures and mock mode
 
 `scripts/make-fixtures.ts` generates everything under `fixtures/` relative to `FIXTURE_NOW = 2026-10-03T19:00Z`:
@@ -211,3 +215,18 @@ Each spike's conclusion is in `docs/DECISIONS.md` D-008 to D-022. Code and tests
   - Hide from Detail shows a message and removes the game from Play (13 games). Group still sees it.
   - A session-length override from the Y menu shows on Detail as "Short sessions (set by you)".
 - The Profiles screen is included in the ten-foot audit at 1080p and 4K.
+
+### Phase 7 — Tonight picker
+
+- **One unit test per signal** (`packages/core/src/picker.test.ts`): inProgress (games, resume, next-up), fitsTime as a hard media filter with the "42 minutes left" text, tooLong as a soft per-step penalty, fitsGroup (boost and filter), groupUnknown, controllerFriendly and noController, favourite, neglected (games and media), and recentlySkipped (6.9 days counts, 7.1 days does not). There are also tests for weights from the context, filters, key tie-break, the reason format, card slots, wildcard reproducibility, rerolls never repeating, and empty input.
+- **Golden tests for a fixed fixture evening** (`apps/server/test/tonight.test.ts`, Saturday 3 Oct 2026 19:00):
+  - Two of us, 1 hour, either: It Takes Two ("Played on 24 Sep, couch co-op for two"), Vampire Survivors (finish), Bluey (wildcard, "7 minutes long, the next episode").
+  - Solo, 30 min, watch: Bluey, then Paddington 2 ("18 minutes left, started on Thursday"). Severance (42 minutes left) is filtered out.
+  - Solo, all evening, play: Cyberpunk 2077, Hades, then Portal 2 ("Installed but never played").
+- **Skipped items drop for 7 days**:
+  - A reroll records three skips and shows three new items.
+  - A new session that evening scores each skipped item exactly 30 lower, and none of them is the best pick.
+  - Eight days later no skip signal remains, and Vampire Survivors leads again.
+  - Skips are per profile.
+- **Other API checks**: answers persist and switch the active profile, accept is recorded, input is validated, and weights come from the config.
+- **UI** (`tonight.e2e.ts`): from Home, Tonight to a running pick takes 5 presses (A, A, A, A, A), within the brief's "at most five". Reroll gives new cards. B steps back through the questions. Last answers are preselected. The ten-foot audit covers the question and results screens at 1080p and 4K.

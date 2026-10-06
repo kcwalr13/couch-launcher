@@ -138,11 +138,14 @@ export interface TonightAnswers {
 export interface TonightRequest extends TonightAnswers {
   /** 0 for the first set; each reroll increments it. */
   page?: number;
-  /** Keys shown on earlier pages of this session (they are excluded and recorded as skipped). */
+  /** Keys shown on earlier pages of this session: never shown again in this session. */
   exclude?: string[];
+  /** Keys on the page being rerolled away from: recorded as skipped. */
+  skipped?: string[];
 }
 
-export type PickSlot = "best" | "finish" | "wildcard";
+/** "runnerUp" fills the second card when nothing is in progress. */
+export type PickSlot = "best" | "finish" | "runnerUp" | "wildcard";
 
 export interface Pick {
   slot: PickSlot;

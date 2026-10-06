@@ -13,7 +13,19 @@ import type {
   UnifiedItem,
   WatchResponse,
 } from "@couch/core";
-import { byRecentActivity, isGameKey, parseKey, type SessionLength } from "@couch/core";
+import {
+  byRecentActivity,
+  isGameKey,
+  parseKey,
+  pickTonight,
+  type SessionLength,
+  SKIP_DAYS,
+  type TonightAnswers,
+  type TonightMode,
+  type TonightRequest,
+  type TonightResponse,
+  type TonightTime,
+} from "@couch/core";
 import type { FetchFn } from "./adapters/jellyfin/client.ts";
 import { allMediaItems, JellyfinSource, watchRows } from "./adapters/jellyfin/jellyfin.ts";
 import { StoreMetadata } from "./adapters/steam/store-metadata.ts";
@@ -348,6 +360,95 @@ export function createApp(deps: AppDeps): App {
     const profile = store.activeProfile();
     const pref = store.setPref(profile.id, b.key, change);
     return json({ ok: true, profileId: profile.id, pref });
+  });
+
+  // ---- Tonight picker ----
+
+  const TIMES: TonightTime[] = [30, 60, 120, "evening"];
+  const MODES: TonightMode[] = ["play", "watch", "either"];
+  const lastAnswers = (): TonightAnswers => {
+    const fallback: TonightAnswers = { time: 60, profileId: store.activeProfile().id, mode: "either" };
+    try {
+      const v = JSON.parse(store.getSetting("tonight.last") ?? "null") as TonightAnswers | null;
+      if (v && TIMES.includes(v.time) && MODES.includes(v.mode) && store.profile(v.profileId)) return v;
+    } catch {
+      // fall through
+    }
+    return fallback;
+  };
+
+  router.get("/api/tonight/last", () => json({ answers: lastAnswers() }));
+
+  router.post("/api/tonight", async (req) => {
+    const b = (await readJson(req)) as Partial<TonightRequest> | undefined;
+    if (!b || !TIMES.includes(b.time as TonightTime))
+      return errorJson(400, "time must be 30, 60, 120 or evening");
+    if (!MODES.includes(b.mode as TonightMode)) return errorJson(400, "mode must be play, watch or either");
+    const profile = typeof b.profileId === "number" ? store.profile(b.profileId) : null;
+    if (!profile) return errorJson(400, "unknown profile");
+    const keyList = (v: unknown) =>
+      Array.isArray(v)
+        ? v.filter((k): k is string => typeof k === "string" && parseKey(k) !== null).slice(0, 200)
+        : [];
+    const exclude = keyList(b.exclude);
+    const skipped = keyList(b.skipped);
+    const page = typeof b.page === "number" && b.page >= 0 ? Math.floor(b.page) : 0;
+    const answers: TonightAnswers = {
+      time: b.time as TonightTime,
+      profileId: profile.id,
+      mode: b.mode as TonightMode,
+    };
+
+    // Who is here is also who is on the couch: the answer switches the active profile.
+    store.setActiveProfile(profile.id);
+    store.setSetting("tonight.last", JSON.stringify(answers));
+    const now = clock.now();
+    if (skipped.length)
+      store.addSuggestionEvents(
+        skipped.map((k) => ({ ts: now.toISOString(), profileId: profile.id, itemKey: k, action: "skipped" })),
+      );
+
+    const since = new Date(now.getTime() - SKIP_DAYS * 86_400_000).toISOString();
+    const skips = new Map<string, string>();
+    for (const e of store.suggestionEvents(profile.id, since))
+      if (e.action === "skipped") skips.set(e.itemKey, e.ts);
+
+    const result = pickTonight(await allItems(profile.id), {
+      now,
+      utcOffsetMin: -now.getTimezoneOffset(),
+      time: answers.time,
+      mode: answers.mode,
+      profile,
+      weights: config.picker.weights,
+      skips,
+      exclude: new Set(exclude),
+      page,
+    });
+    store.addSuggestionEvents(
+      result.picks.map((p) => ({
+        ts: now.toISOString(),
+        profileId: profile.id,
+        itemKey: p.item.key,
+        action: "shown",
+      })),
+    );
+    const body: TonightResponse = {
+      now: now.toISOString(),
+      answers,
+      page,
+      picks: result.picks,
+      remaining: result.remaining,
+    };
+    return json(body);
+  });
+
+  router.post("/api/tonight/accept", async (req) => {
+    const b = (await readJson(req)) as { key?: unknown; profileId?: unknown } | undefined;
+    if (typeof b?.key !== "string" || !parseKey(b.key)) return errorJson(400, "invalid item key");
+    const profile = typeof b.profileId === "number" ? store.profile(b.profileId) : store.activeProfile();
+    if (!profile) return errorJson(400, "unknown profile");
+    store.addSuggestionEvents([{ ts: nowIso(), profileId: profile.id, itemKey: b.key, action: "accepted" }]);
+    return json({ ok: true });
   });
 
   router.get("/api/hidden", async () => {

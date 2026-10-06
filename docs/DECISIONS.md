@@ -237,3 +237,41 @@ It is off by default; the on-device checklist says when to turn it on. The input
 **D-052 — Profile switching UI** (2026-10-06, P6). The Home profile chip opens "Who's on the couch?", with one large card per profile showing its size. A switches the profile, refreshes all data, says "<name> is on the couch", and returns. UI state is saved per profile, so each profile resumes where it left off. Profiles stay the three presets (brief default); creating and renaming profiles needs text entry, which the controller-only rule rules out, so they are not editable in v1.
 
 **D-053 — Focus returns when a modal closes** (2026-10-06, P6). Closing the Y menu removes its focused element. The scope stack now hands DOM focus back to the focused element of the scope underneath on the next frame. An end-to-end test caught this.
+
+## Phase 7: Tonight picker
+
+**D-054 — Signal definitions** (2026-10-06, P7). Default weights are in `packages/core/src/picker-config.ts` and can be overridden under `[picker.weights]`.
+
+| Signal | Applies when | Default weight |
+| --- | --- | --- |
+| inProgress | Game played ≤ 14 days ago; Jellyfin resume item with a position; next-up episode ("the next episode") | +40 |
+| fitsTime | Game session fits the time; media fits (resume: "42 minutes left", else "1 hour 56 minutes long") | +6 |
+| tooLong (games, soft) | Per length step beyond the time (short 30, medium 60, long 120 min) | −12 per step |
+| fitsGroup | Profile size > 1 and the game has couch co-op | +8 |
+| groupUnknown | Profile size > 1 and couch support is unknown (no store data, e.g. shortcuts) | −10 |
+| controllerFriendly | Full controller support | +4 |
+| noController | Partial or no controller support. Unknown is not penalised, so shortcuts are not punished for missing store data. | −15 |
+| favourite | Favourite for the active profile | +20 |
+| neglected | Game unplayed ≥ 60 days or never; unwatched movie added ≥ 60 days ago | +6 |
+| recentlySkipped | A skip in the last 7 days | −30 |
+
+"All evening" gives games no fitsTime boost, because every game fits and the reason would otherwise always read "plenty of time".
+
+Hard filters:
+- hidden items
+- items already shown in this picker session
+- the wrong type for "play" or "watch"
+- media that is not a resume, next-up or unwatched movie
+- media whose remaining runtime exceeds the time
+- with more than one person on the couch, games known to lack couch co-op
+
+**D-055 — Cards** (2026-10-06, P7).
+1. **Best**: the top-ranked item.
+2. **Finish what you started**: the best remaining item with an inProgress signal. If there is none, the next best item, labelled "Also good" (slot `runnerUp`, an addition to the brief's slots).
+3. **Wildcard**: chosen from the top 8 remaining items, restricted to the other type (game or media) from card 1 when the answer was "either". The seed is local date + profile id + reroll page, so it is reproducible per evening and changes on reroll.
+
+Ties break on the item key. A reason is the top two positive signals by score, written in reading order: time, then progress, then the rest ("42 minutes left, started on Tuesday"). With no positive signal the reason is "Ready to play", "Ready to watch" or "Something different tonight".
+
+**D-056 — History** (2026-10-06, P7). Every returned card is recorded as `shown`. Rerolling sends the previous page's keys as `skipped`, which are recorded, and all keys shown so far as `exclude`. Choosing a card records `accepted`, then launches it. Skips older than 7 days are ignored, and skips are per profile.
+
+**D-057 — Answers** (2026-10-06, P7). The last answers are stored in `app_setting` (`tonight.last`) and preselected and focused on each question; the defaults are 1 hour, the active profile, and either. Answering "Who is here?" also makes that profile active, since the people on the couch are the same. B steps back through the questions.
