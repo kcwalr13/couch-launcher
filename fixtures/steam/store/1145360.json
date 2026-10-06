@@ -1,0 +1,35 @@
+{
+  "1145360": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Hades",
+      "steam_appid": 1145360,
+      "short_description": "Defy the god of the dead as you hack and slash out of the Underworld.",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "23",
+          "description": "Indie"
+        },
+        {
+          "id": "3",
+          "description": "RPG"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        }
+      ]
+    }
+  }
+}

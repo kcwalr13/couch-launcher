@@ -1,0 +1,8 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+*.log
+.DS_Store
+/out/
+apps/web/e2e/__screens__/tmp/

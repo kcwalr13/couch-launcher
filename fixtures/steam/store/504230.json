@@ -1,0 +1,31 @@
+{
+  "504230": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Celeste",
+      "steam_appid": 504230,
+      "short_description": "Help Madeline survive her inner demons on her journey to the top of Celeste Mountain.",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "23",
+          "description": "Indie"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        }
+      ]
+    }
+  }
+}

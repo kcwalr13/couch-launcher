@@ -1,0 +1,5 @@
+[test]
+# Only test source trees (never out/ or node_modules).
+root = "."
+preload = ["./scripts/test-preload.ts"]
+pathIgnorePatterns = ["out/**", "**/node_modules/**", "fixtures/**", "apps/web/dist/**", "apps/web/test-results/**"]

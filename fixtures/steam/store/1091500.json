@@ -1,0 +1,27 @@
+{
+  "1091500": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Cyberpunk 2077",
+      "steam_appid": 1091500,
+      "short_description": "Cyberpunk 2077 is an open-world, action-adventure RPG set in the dark future of Night City.",
+      "genres": [
+        {
+          "id": "3",
+          "description": "RPG"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        }
+      ]
+    }
+  }
+}

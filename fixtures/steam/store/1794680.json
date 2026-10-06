@@ -1,0 +1,51 @@
+{
+  "1794680": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Vampire Survivors",
+      "steam_appid": 1794680,
+      "short_description": "Mow down thousands of night creatures and survive until dawn!",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "4",
+          "description": "Casual"
+        },
+        {
+          "id": "23",
+          "description": "Indie"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 39,
+          "description": "Shared/Split Screen Co-op"
+        },
+        {
+          "id": 24,
+          "description": "Shared/Split Screen"
+        },
+        {
+          "id": 28,
+          "description": "Full controller support"
+        },
+        {
+          "id": 44,
+          "description": "Remote Play Together"
+        }
+      ]
+    }
+  }
+}

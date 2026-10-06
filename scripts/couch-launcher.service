@@ -1,0 +1,17 @@
+# systemd user unit for the Couch Launcher service.
+# Installed by install.sh to ~/.config/systemd/user/couch-launcher.service
+[Unit]
+Description=Couch Launcher (local TV home screen service)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/couch-launcher serve
+Restart=on-failure
+RestartSec=3
+# The service only listens on 127.0.0.1; no extra privileges are needed.
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

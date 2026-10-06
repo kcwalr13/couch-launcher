@@ -1,0 +1,59 @@
+{
+  "105600": {
+    "success": true,
+    "data": {
+      "type": "game",
+      "name": "Terraria",
+      "steam_appid": 105600,
+      "short_description": "Dig, fight, explore, build! Nothing is impossible in this action-packed adventure game.",
+      "genres": [
+        {
+          "id": "1",
+          "description": "Action"
+        },
+        {
+          "id": "25",
+          "description": "Adventure"
+        },
+        {
+          "id": "23",
+          "description": "Indie"
+        },
+        {
+          "id": "3",
+          "description": "RPG"
+        }
+      ],
+      "categories": [
+        {
+          "id": 2,
+          "description": "Single-player"
+        },
+        {
+          "id": 1,
+          "description": "Multi-player"
+        },
+        {
+          "id": 36,
+          "description": "Online PvP"
+        },
+        {
+          "id": 38,
+          "description": "Online Co-op"
+        },
+        {
+          "id": 39,
+          "description": "Shared/Split Screen Co-op"
+        },
+        {
+          "id": 24,
+          "description": "Shared/Split Screen"
+        },
+        {
+          "id": 18,
+          "description": "Partial Controller Support"
+        }
+      ]
+    }
+  }
+}

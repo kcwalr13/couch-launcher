@@ -1,0 +1,29 @@
+{
+  "name": "couch-launcher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "check": "bun scripts/check.ts",
+    "dev": "COUCH_MOCK=1 bun apps/server/src/main.ts serve",
+    "build:web": "bun run --cwd apps/web build",
+    "build": "bun scripts/build.ts",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "bun scripts/typecheck.ts",
+    "test": "bun test",
+    "e2e": "node node_modules/@playwright/test/cli.js test -c apps/web/playwright.config.ts",
+    "fixtures": "bun scripts/make-fixtures.ts",
+    "doctor": "bun apps/server/src/main.ts doctor"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@playwright/test": "1.56.1",
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
+  }
+}
