@@ -5,11 +5,12 @@
  * and the UI is served. Extra checks are added per phase (see docs/DESIGN.md).
  */
 import { existsSync, mkdirSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 const repo = path.resolve(import.meta.dir, "..");
 const exe = path.join(repo, "out", "couch-launcher-windows-x64.exe");
-const prefix = process.env.WINEPREFIX || path.join(repo, "out", "wineprefix");
+const prefix = process.env.WINEPREFIX || path.join(os.tmpdir(), "couch-launcher-wineprefix");
 mkdirSync(prefix, { recursive: true });
 const env = { ...process.env, WINEPREFIX: prefix, WINEDEBUG: "-all" };
 
@@ -38,15 +39,19 @@ const server = Bun.spawn(["wine", exe, "serve"], {
   stderr: "pipe",
 });
 try {
-  let status: { platform?: string; mock?: boolean } | null = null;
-  for (let i = 0; i < 40 && !status; i++) {
-    await Bun.sleep(500);
-    try {
-      status = (await (await fetch(`http://127.0.0.1:${port}/api/status`)).json()) as typeof status;
-    } catch {
-      // not up yet
+  type Status = { platform?: string; mock?: boolean };
+  const poll = async (): Promise<Status | null> => {
+    for (let i = 0; i < 40; i++) {
+      await Bun.sleep(500);
+      try {
+        return (await (await fetch(`http://127.0.0.1:${port}/api/status`)).json()) as Status;
+      } catch {
+        // not up yet
+      }
     }
-  }
+    return null;
+  };
+  const status = await poll();
   check("serve answers /api/status", status !== null);
   check("platform is windows", status?.platform === "windows", String(status?.platform));
   const html = await (await fetch(`http://127.0.0.1:${port}/`)).text();
